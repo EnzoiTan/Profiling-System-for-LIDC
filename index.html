@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Library Users Database</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+    <style>
+      body {
+        color: #566787;
+        background: #f5f5f5;
+        font-family: "Roboto", sans-serif;
+      }
+      .table-responsive {
+        margin: 30px 0;
+      }
+      .table-wrapper {
+        width: max-content;
+        min-width: 1200px;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+      }
+      .table-title {
+        margin: 0 0 10px;
+        font-size: 22px;
+        padding-bottom: 10px;
+      }
+      table.table th,
+      table.table td {
+        border-color: #e9e9e9;
+      }
+      table.table-striped tbody tr:nth-of-type(odd) {
+        background-color: #fcfcfc;
+      }
+      table.table-striped.table-hover tbody tr:hover {
+        background: #f5f5f5;
+      }
+      .pagination {
+        float: right;
+        margin: 0 0 5px;
+      }
+      .pagination li a {
+        font-size: 95%;
+        width: 30px;
+        height: 30px;
+        color: #999;
+        margin: 0 2px;
+        line-height: 30px;
+        border-radius: 30px !important;
+        text-align: center;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="table-responsive">
+        <div class="table-wrapper">
+          <div class="table-title">
+            <h2>Library Users <b>Details</b></h2>
+          </div>
+          <table class="table table-striped table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Library ID No.</th>
+                <th>Name</th>
+                <th>Gender</th>
+                <th>Department</th>
+                <th>Course</th>
+                <th>Major</th>
+                <th>School Year</th>
+                <th>Semester</th>
+                <th>Valid ID Until</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <!-- Data will be dynamically loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script
+      type="module"
+      src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"
+    ></script>
+    <script
+      type="module"
+      src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"
+    ></script>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
