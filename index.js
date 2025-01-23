@@ -1,6 +1,6 @@
 // Import the necessary Firebase functions
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -18,87 +18,67 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Function to fetch and display data
-async function fetchUserData() {
-    const tableBody = document.getElementById("table-body");
-
-    // Helper function to capitalize each word in a name
-function capitalizeName(name) {
-  return name
-    .split(' ') // Split the string into an array of words
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
-    .join(' '); // Join the words back into a single string
-}
-  
-    try {
-      // Fetch users from the "LIDC_Users" collection
-      const usersRef = collection(db, "LIDC_Users");
-      const querySnapshot = await getDocs(usersRef);
-  
-      // Debugging: Check if documents are fetched
-      console.log("Total documents fetched:", querySnapshot.size);
-  
-      // Counter for row number
-      let rowNumber = 1;
-  
-      // Loop through the documents and create rows in the table
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-  
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${rowNumber++}</td>  <!-- Display row number based on counter -->
-          <td>${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString('en-US', { 
-          year: 'numeric', month: 'long', day: 'numeric' }) : 'None'}</td>
-          <td>${data.libraryIdNo}</td>
-          <td>${capitalizeName(data.firstName)} ${capitalizeName(data.middleInitial)}. ${capitalizeName(data.lastName)}</td>
-          <td>${data.timesEntered}</td>
-          <td>${capitalizeGender(data.gender)}</td>
-          <td>${data.department.toUpperCase()}</td>
-          <td>${(data.course)}</td>
-          <td>${(data.major)}</td>
-          <td>${(data.strand)}</td>
-          <td>${(data.grade)}</td>
-          <td>${data.schoolYear}</td>
-          <td>${capitalizeSemester(data.semester)}</td>
-          <td>${data.validUntil || 'N/A'}</td>
-        `;
-        tableBody.appendChild(row);
-      });
-    } catch (error) {
-      console.error("Error fetching documents: ", error);
-    }
-    
-}
-
-
 // Helper function to capitalize names
 function capitalizeName(name) {
-  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 }
 
-// Helper function to capitalize gender
+// Helper functions for formatting data
+function capitalizePatron(patron) {
+  return patron.charAt(0).toUpperCase() + patron.slice(1).toLowerCase();
+}
+
 function capitalizeGender(gender) {
   return gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
 }
 
-// Helper function to capitalize semester and remove dash
 function capitalizeSemester(semester) {
   return semester ? semester.replace('-', ' ').replace(/\b\w/g, char => char.toUpperCase()) : 'N/A';
 }
 
-// Helper function to capitalize all words in a string
-function capitalizeWords(text) {
-  return text
-    ? text
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ')
-    : '';
-}
+// Function to fetch and display data with real-time updates
+function fetchUserData() {
+  const tableBody = document.getElementById("table-body");
+  const usersRef = collection(db, "LIDC_Users");
 
-// Call the function to fetch and display data when the page loads
-window.onload = fetchUserData;
+  // Listen for real-time updates
+  onSnapshot(usersRef, (snapshot) => {
+    tableBody.innerHTML = ""; // Clear existing table rows
+
+    let rowNumber = 1; // Counter for row numbers
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${rowNumber++}</td>
+        <td>${data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' }) : 'None'}</td>
+        <td>${data.libraryIdNo}</td>
+        <td>${data.patron ? capitalizePatron(data.patron) : 'None'}</td>
+        <td>${capitalizeName(data.lastName)}, ${capitalizeName(data.firstName)} ${capitalizeName(data.middleInitial)}.</td>
+        <td>${data.timesEntered}</td>
+        <td>${capitalizeGender(data.gender)}</td>
+        <td>${data.department.toUpperCase()}</td>
+        <td>${data.course || ''}</td>
+        <td>${data.major || ''}</td>
+        <td>${data.strand || ''}</td>
+        <td>${data.grade || ''}</td>
+        <td>${data.schoolYear}</td>
+        <td>${capitalizeSemester(data.semester)}</td>
+        <td>${data.validUntil || ''}</td>
+      `;
+
+      tableBody.appendChild(row);
+    });
+  }, (error) => {
+    console.error("Error fetching real-time updates: ", error);
+  });
+}
 
 // Function to enable sorting functionality on the table
 function enableSorting() {
@@ -146,7 +126,6 @@ function sortTable(columnIndex, sortType, sortOrder) {
   tableBody.innerHTML = "";
   rows.forEach(row => tableBody.appendChild(row));
 }
-
 
 // Function to export table data to Excel
 function exportToExcel() {
@@ -207,14 +186,11 @@ function exportToExcel() {
   XLSX.writeFile(wb, "Library_Users.xlsx");
 }
 
-
-
 // Add an event listener to the export button
 document.getElementById("export-btn").addEventListener("click", exportToExcel);
 
 // Call the function to fetch and display data when the page loads
 window.onload = () => {
-  fetchUserData(); // Assuming fetchUserData is defined elsewhere
-  enableSorting(); // Enable sorting once data is loaded
+  fetchUserData(); // Real-time updates
+  enableSorting(); // Enable sorting functionality
 };
-

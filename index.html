@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="icon" href="zppsu-logo.png" type="image/x-icon" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Library Users Database</title>
     <link
@@ -26,13 +27,17 @@
         color: #566787;
         background: #f5f5f5;
         font-family: "Roboto", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
       }
       .table-responsive {
         margin: 30px 0;
       }
       .table-wrapper {
         width: max-content;
-        min-width: 1200px;
+        min-width: 1500px;
         background: #fff;
         padding: 20px;
         box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
@@ -75,6 +80,12 @@
       th.descending::after {
         content: " ▼";
       }
+
+      table.table td:nth-child(6), /* Select the 6th column (Times Entered) */
+table.table th:nth-child(6) {
+        /* Also center-align the header */
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -93,6 +104,7 @@
                 <th data-sort="number">#</th>
                 <th data-sort="date">Date</th>
                 <th data-sort="text">Library ID No.</th>
+                <th data-sort="text">Type of Patron</th>
                 <th data-sort="text">Name</th>
                 <th data-sort="number">Times Entered</th>
                 <th data-sort="text">Gender</th>
