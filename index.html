@@ -63,6 +63,9 @@
       table.table-striped.table-hover tbody tr:hover {
         background: #f5f5f5;
       }
+      .highlight {
+        background-color: yellow; /* Highlight color */
+      }
       .pagination {
         float: right;
         margin: 0 0 5px;
@@ -88,7 +91,7 @@
       }
 
       table.table td:nth-child(6), /* Select the 6th column (Times Entered) */
-table.table th:nth-child(6) {
+      table.table th:nth-child(6) {
         /* Also center-align the header */
         text-align: center;
       }
@@ -96,96 +99,38 @@ table.table th:nth-child(6) {
   </head>
   <body>
     <div class="container">
-      <!-- Admin Table -->
-      <div class="table-responsive">
-        <div class="table-wrapper">
-          <div class="table-title">
-            <h2>Admin <b>Details</b></h2>
-          </div>
-          <table
-            id="admin-table"
-            class="table table-striped table-hover table-bordered"
-          >
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>ID Number</th>
-                <th>Type of Patron</th>
-                <th>Name</th>
-                <th>Times Entered</th>
-                <th>Gender</th>
-                <th>College/Department</th>
-                <th>School Year</th>
-                <th>Semester</th>
-                <th>ID Validity</th>
-              </tr>
-            </thead>
-            <tbody id="admin-body"></tbody>
-          </table>
-        </div>
+      <!-- Patron Type Toggle Buttons -->
+      <div class="btn-group" style="margin-bottom: 20px">
+        <button class="btn btn-primary" onclick="toggleTable('student')">
+          Students
+        </button>
+        <button class="btn btn-primary" onclick="toggleTable('faculty')">
+          Faculty
+        </button>
+        <button class="btn btn-primary" onclick="toggleTable('admin')">
+          Admin
+        </button>
+        <button class="btn btn-primary" onclick="toggleTable('visitor')">
+          Visitors
+        </button>
+        <button class="btn btn-primary" onclick="showAllTables()">
+          Show All
+        </button>
       </div>
 
-      <!-- Faculty Table -->
-      <div class="table-responsive">
-        <div class="table-wrapper">
-          <div class="table-title">
-            <h2>Faculty <b>Details</b></h2>
-          </div>
-          <table
-            id="faculty-table"
-            class="table table-striped table-hover table-bordered"
-          >
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>ID Number</th>
-                <th>Type of Patron</th>
-                <th>Name</th>
-                <th>Times Entered</th>
-                <th>Gender</th>
-                <th>College/Department</th>
-                <th>School Year</th>
-                <th>Semester</th>
-                <th>ID Validity</th>
-              </tr>
-            </thead>
-            <tbody id="faculty-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Visitor Table -->
-      <div class="table-responsive">
-        <div class="table-wrapper">
-          <div class="table-title">
-            <h2>Visitor <b>Details</b></h2>
-          </div>
-          <table
-            id="visitor-table"
-            class="table table-striped table-hover table-bordered"
-          >
-            <thead>
-              <th>#</th>
-              <th>Date</th>
-              <th>ID Number</th>
-              <th>Type of Patron</th>
-              <th>Name</th>
-              <th>Times Entered</th>
-              <th>Gender</th>
-              <th>School</th>
-              <th>School Year</th>
-              <th>Semester</th>
-              <th>ID Validity</th>
-            </thead>
-            <tbody id="visitor-body"></tbody>
-          </table>
-        </div>
+      <!-- Search Input -->
+      <div class="form-group">
+        <input
+          type="text"
+          id="search-input"
+          class="form-control"
+          placeholder="Search..."
+          onkeyup="searchTables()"
+        />
       </div>
 
       <!-- Student Table -->
-      <div class="table-responsive">
+      <div class="table-responsive" id="student-table-container">
         <div class="table-wrapper">
           <div class="table-title">
             <h2>Student <b>Details</b></h2>
@@ -215,6 +160,108 @@ table.table th:nth-child(6) {
           </table>
         </div>
       </div>
+
+      <!-- Faculty Table -->
+      <div
+        class="table-responsive"
+        id="faculty-table-container"
+        style="display: none"
+      >
+        <div class="table-wrapper">
+          <div class="table-title">
+            <h2>Faculty <b>Details</b></h2>
+          </div>
+          <table
+            id="faculty-table"
+            class="table table-striped table-hover table-bordered"
+          >
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>ID Number</th>
+                <th>Type of Patron</th>
+                <th>Name</th>
+                <th>Times Entered</th>
+                <th>Gender</th>
+                <th>College/Department</th>
+                <th>School Year</th>
+                <th>Semester</th>
+                <th>ID Validity</th>
+              </tr>
+            </thead>
+            <tbody id="faculty-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Table -->
+      <div
+        class="table-responsive"
+        id="admin-table-container"
+        style="display: none"
+      >
+        <div class="table-wrapper">
+          <div class="table-title">
+            <h2>Admin <b>Details</b></h2>
+          </div>
+          <table
+            id="admin-table"
+            class="table table-striped table-hover table-bordered"
+          >
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>ID Number</th>
+                <th>Type of Patron</th>
+                <th>Name</th>
+                <th>Times Entered</th>
+                <th>Gender</th>
+                <th>Office</th>
+                <th>School Year</th>
+                <th>Semester</th>
+                <th>ID Validity</th>
+              </tr>
+            </thead>
+            <tbody id="admin-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Visitor Table -->
+      <div
+        class="table-responsive"
+        id="visitor-table-container"
+        style="display: none"
+      >
+        <div class="table-wrapper">
+          <div class="table-title">
+            <h2>Visitor <b>Details</b></h2>
+          </div>
+          <table
+            id="visitor-table"
+            class="table table-striped table-hover table-bordered"
+          >
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>ID Number</th>
+                <th>Type of Patron</th>
+                <th>Name</th>
+                <th>Times Entered</th>
+                <th>Gender</th>
+                <th>School</th>
+                <th>School Year</th>
+                <th>Semester</th>
+                <th>ID Validity</th>
+              </tr>
+            </thead>
+            <tbody id="visitor-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -227,5 +274,87 @@ table.table th:nth-child(6) {
       src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"
     ></script>
     <script type="module" src="index.js"></script>
+    <script>
+      function toggleTable(type) {
+        // Hide all tables
+        document.getElementById("student-table-container").style.display =
+          "none";
+        document.getElementById("faculty-table-container").style.display =
+          "none";
+        document.getElementById("admin-table-container").style.display = "none";
+        document.getElementById("visitor-table-container").style.display =
+          "none";
+
+        // Show the selected table
+        document.getElementById(type + "-table-container").style.display =
+          "block";
+      }
+
+      function showAllTables() {
+        // Show all tables
+        document.getElementById("student-table-container").style.display =
+          "block";
+        document.getElementById("faculty-table-container").style.display =
+          "block";
+        document.getElementById("admin-table-container").style.display =
+          "block";
+        document.getElementById("visitor-table-container").style.display =
+          "block";
+      }
+
+      function searchTables() {
+        const input = document
+          .getElementById("search-input")
+          .value.toLowerCase();
+        const tables = ["student", "faculty", "admin", "visitor"];
+        let tableFound = false;
+
+        tables.forEach((table) => {
+          const tbody = document.getElementById(table + "-body");
+          const rows = tbody.getElementsByTagName("tr");
+          let tableHasMatches = false;
+
+          for (let i = 0; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName("td");
+            let rowContainsSearchTerm = false;
+
+            for (let j = 0; j < cells.length; j++) {
+              if (cells[j]) {
+                const cellText = cells[j].textContent || cells[j].innerText;
+                if (cellText.toLowerCase().indexOf(input) > -1) {
+                  rowContainsSearchTerm = true;
+                  tableHasMatches = true;
+                  // Highlight the matching text
+                  const regex = new RegExp(`(${input})`, "gi");
+                  cells[j].innerHTML = cellText.replace(
+                    regex,
+                    '<span class="highlight">$1</span>'
+                  );
+                } else {
+                  // Reset the cell content if it doesn't match
+                  cells[j].innerHTML = cellText;
+                }
+              }
+            }
+
+            rows[i].style.display = rowContainsSearchTerm ? "" : "none";
+          }
+
+          if (tableHasMatches) {
+            tableFound = true;
+            document.getElementById(table + "-table-container").style.display =
+              "block";
+          } else {
+            document.getElementById(table + "-table-container").style.display =
+              "none";
+          }
+        });
+
+        // If no table has matches, hide all tables
+        if (!tableFound) {
+          showAllTables(); // Show all tables if no matches found
+        }
+      }
+    </script>
   </body>
 </html>

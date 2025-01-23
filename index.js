@@ -78,7 +78,7 @@ function fetchUserData() {
           <td>${capitalize(data.lastName)}, ${capitalize(data.firstName)} ${formattedMiddleInitial}</td>
           <td>${data.timesEntered || 0}</td>
           <td>${capitalize(data.gender)}</td>
-          <td>${(data.department || "None").toUpperCase()}</td>
+          <td>${(data.campusDept || "None")}</td>
           <td>${capitalize(data.schoolYear)}</td>
           <td>${capitalizeSemester(data.semester)}</td>
           <td>${data.validUntil || "N/A"}</td>
@@ -93,7 +93,7 @@ function fetchUserData() {
           <td>${capitalize(data.lastName)}, ${capitalize(data.firstName)} ${formattedMiddleInitial}</td>
           <td>${data.timesEntered || 0}</td>
           <td>${capitalize(data.gender)}</td>
-          <td>${(data.department).toUpperCase() || "None"}</td>
+          <td>${(data.collegeSelect).toUpperCase() || "None"}</td>
           <td>${capitalize(data.schoolYear)}</td>
           <td>${capitalizeSemester(data.semester)}</td>
           <td>${data.validUntil || "N/A"}</td>
@@ -123,9 +123,9 @@ function fetchUserData() {
           <td>${capitalize(data.lastName)}, ${capitalize(data.firstName)} ${formattedMiddleInitial}</td>
           <td>${data.timesEntered || 0}</td>
           <td>${capitalize(data.gender)}</td>
+          <td>${data.department.toUpperCase()}</td>
           <td>${data.course || "N/A"}</td>
           <td>${data.major || "N/A"}</td>
-          <td>${data.yearLevel || "N/A"}</td>
           <td>${data.schoolYear || "N/A"}</td>
           <td>${capitalizeSemester(data.semester)}</td>
           <td>${data.validUntil || "N/A"}</td>
