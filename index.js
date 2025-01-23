@@ -108,7 +108,13 @@ function fetchUserData() {
           <td>${capitalize(data.lastName)}, ${capitalize(data.firstName)} ${formattedMiddleInitial}</td>
           <td>${data.timesEntered || 0}</td>
           <td>${capitalize(data.gender)}</td>
-          <td>${data.schoolSelect ? data.schoolSelect.toUpperCase() : 'None'}</td>
+          <td>
+            ${data.specifySchool 
+              ? data.specifySchool.toUpperCase() 
+              : data.schoolSelect 
+                ? data.schoolSelect.toUpperCase() 
+                : 'None'}
+          </td>
           <td>${capitalize(data.schoolYear)}</td>
           <td>${capitalizeSemester(data.semester)}</td>
           <td>${data.validUntil || "N/A"}</td>

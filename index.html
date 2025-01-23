@@ -23,19 +23,35 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
     <style>
+      * {
+        &::-webkit-scrollbar {
+          width: 12px;
+          height: 10px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 5px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #b1b1b1;
+          border-radius: 5px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+          background: #838383;
+        }
+      }
+
       body {
         color: #566787;
         background: #f5f5f5;
         font-family: "Roboto", sans-serif;
         display: flex;
         justify-content: center;
-        align-items: center;
-        height: max-content;
-        margin: 10 0px;
-      }
-
-      .container {
-        overflow-y: auto;
+        min-height: 100vh; /* Ensures the body covers the full viewport height */
+        margin: 40px; /* Removes the margin around the body */
       }
 
       .table-responsive {
@@ -47,7 +63,27 @@
         background: #fff;
         padding: 20px;
         box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+        overflow-x: auto;
       }
+
+      .table-wrapper::-webkit-scrollbar {
+        width: 12px;
+      }
+
+      .table-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 5px;
+      }
+
+      .table-wrapper::-webkit-scrollbar-thumb {
+        background: #b1b1b1;
+        border-radius: 5px;
+      }
+
+      .table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #838383;
+      }
+
       .table-title {
         margin: 0 0 10px;
         font-size: 22px;
@@ -99,8 +135,28 @@
   </head>
   <body>
     <div class="container">
+      <!-- Search Input -->
+      <div class="form-group">
+        <input
+          type="text"
+          id="search-input"
+          class="form-control"
+          placeholder="Search..."
+          onkeyup="searchTables()"
+        />
+      </div>
+
       <!-- Patron Type Toggle Buttons -->
-      <div class="btn-group" style="margin-bottom: 20px">
+      <div
+        class="btn-group"
+        style="
+          display: flex;
+          margin: 25px 0px 20px 0px;
+          align-items: center;
+          align-items: center;
+        "
+      >
+        <p style="margin: 0 10px; font-weight: bold">Sort by:</p>
         <button class="btn btn-primary" onclick="toggleTable('student')">
           Students
         </button>
@@ -116,17 +172,6 @@
         <button class="btn btn-primary" onclick="showAllTables()">
           Show All
         </button>
-      </div>
-
-      <!-- Search Input -->
-      <div class="form-group">
-        <input
-          type="text"
-          id="search-input"
-          class="form-control"
-          placeholder="Search..."
-          onkeyup="searchTables()"
-        />
       </div>
 
       <!-- Student Table -->
