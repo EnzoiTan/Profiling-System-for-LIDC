@@ -196,6 +196,8 @@
                 <th>Department</th>
                 <th>Course</th>
                 <th>Major</th>
+                <th>Strand</th>
+                <th>Grade</th>
                 <th>School Year</th>
                 <th>Semester</th>
                 <th>Valid ID Until</th>
@@ -351,7 +353,7 @@
         const input = document
           .getElementById("search-input")
           .value.toLowerCase();
-        const tables = ["student", "faculty", "admin", "visitor"];
+        const tables = ["student", "student", "faculty", "admin", "visitor"];
         let tableFound = false;
 
         tables.forEach((table) => {

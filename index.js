@@ -130,8 +130,10 @@ function fetchUserData() {
           <td>${data.timesEntered || 0}</td>
           <td>${capitalize(data.gender)}</td>
           <td>${data.department.toUpperCase()}</td>
-          <td>${data.course || "N/A"}</td>
-          <td>${data.major || "N/A"}</td>
+          <td>${data.course || "---"}</td>
+          <td>${data.major || "---"}</td>
+          <td>${data.strand || "---"}</td>
+          <td>${data.grade || "---"}</td>
           <td>${data.schoolYear || "N/A"}</td>
           <td>${capitalizeSemester(data.semester)}</td>
           <td>${data.validUntil || "N/A"}</td>
