@@ -126,10 +126,85 @@
         content: " ▼";
       }
 
-      table.table td:nth-child(6), /* Select the 6th column (Times Entered) */
-      table.table th:nth-child(6) {
+      table.table td:nth-child(7), /* Select the 6th column (Times Entered) */
+      table.table th:nth-child(7) {
         /* Also center-align the header */
         text-align: center;
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+      }
+
+      .modal-content {
+        background-color: #fff;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 50%; /* Adjust width as needed */
+        max-width: 600px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .close-modal {
+        color: #aaa;
+        float: right;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close-modal:hover,
+      .close-modal:focus {
+        color: #000;
+        text-decoration: none;
+      }
+
+      #timestamp-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      #timestamp-table th,
+      #timestamp-table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      #timestamp-table th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+      }
+
+      #timestamp-table tbody tr:hover {
+        background-color: #f9f9f9;
+      }
+
+      #modal-user-name {
+        font-weight: bold;
       }
     </style>
   </head>
@@ -144,6 +219,23 @@
           placeholder="Search..."
           onkeyup="searchTables()"
         />
+      </div>
+
+      <!-- Modal for displaying timestamps -->
+      <div id="timestamp-modal" class="modal">
+        <div class="modal-content">
+          <span class="close-modal">&times;</span>
+          <h3>Entry Timestamps for <span id="modal-user-name"></span></h3>
+          <table id="timestamp-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date and Time</th>
+              </tr>
+            </thead>
+            <tbody id="timestamp-body"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Patron Type Toggle Buttons -->
@@ -186,6 +278,7 @@
           >
             <thead>
               <tr>
+                <th>Link</th>
                 <th>#</th>
                 <th>Date Registered</th>
                 <th>ID Number</th>
@@ -224,6 +317,7 @@
           >
             <thead>
               <tr>
+                <th>Link</th>
                 <th>#</th>
                 <th>Date Registered</th>
                 <th>ID Number</th>
@@ -258,6 +352,7 @@
           >
             <thead>
               <tr>
+                <th>Link</th>
                 <th>#</th>
                 <th>Date Registered</th>
                 <th>ID Number</th>
@@ -292,6 +387,7 @@
           >
             <thead>
               <tr>
+                <th>Link</th>
                 <th>#</th>
                 <th>Date Registered</th>
                 <th>ID Number</th>

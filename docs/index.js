@@ -47,6 +47,24 @@ function fetchUserData() {
 
   const usersRef = collection(db, "LIDC_Users");
 
+  // Get the modal and its elements
+  const modal = document.getElementById("timestamp-modal");
+  const closeModalBtn = document.querySelector(".close-modal");
+  const timestampBody = document.getElementById("timestamp-body");
+  const modalUserName = document.getElementById("modal-user-name");
+
+  // Close the modal when the close button is clicked
+  closeModalBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // Close the modal when clicking outside the modal
+  window.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+
   // Listen for real-time updates
   onSnapshot(usersRef, (snapshot) => {
     // Clear existing data in all tables
@@ -71,6 +89,9 @@ function fetchUserData() {
 
       if (patronType === "admin") {
         row.innerHTML = `
+          <td>
+            <a href="${data.qrCodeURL}" target="_blank">View</a>
+          </td>
           <td>${adminCount++}</td>
           <td>${formatDate(data.timestamp)}</td>
           <td>${data.libraryIdNo}</td>
@@ -86,6 +107,9 @@ function fetchUserData() {
         adminBody.appendChild(row);
       } else if (patronType === "faculty") {
         row.innerHTML = `
+          <td>
+            <a href="${data.qrCodeURL}" target="_blank">View</a>
+          </td>
           <td>${facultyCount++}</td>
           <td>${formatDate(data.timestamp)}</td>
           <td>${data.libraryIdNo}</td>
@@ -101,6 +125,9 @@ function fetchUserData() {
         facultyBody.appendChild(row);
       } else if (patronType === "visitor") {
         row.innerHTML = `
+          <td>
+            <a href="${data.qrCodeURL}" target="_blank">View</a>
+          </td>
           <td>${visitorCount++}</td>
           <td>${formatDate(data.timestamp)}</td>
           <td>${data.libraryIdNo}</td>
@@ -122,6 +149,9 @@ function fetchUserData() {
         visitorBody.appendChild(row);
       } else if (patronType === "student") {
         row.innerHTML = `
+         <td>
+            <a href="${data.qrCodeURL}" target="_blank">View</a>
+          </td>
           <td>${studentCount++}</td>
           <td>${formatDate(data.timestamp)}</td>
           <td>${data.libraryIdNo}</td>
@@ -140,12 +170,41 @@ function fetchUserData() {
         `;
         studentBody.appendChild(row);
       }
+
+      // Add click event listener to the row
+      row.addEventListener("click", () => {
+        // Clear the timestamp table
+        timestampBody.innerHTML = "";
+
+        // Set the user's name in the modal
+        modalUserName.textContent = `${capitalize(data.lastName)}, ${capitalize(data.firstName)} ${formattedMiddleInitial}`;
+
+        // Add each timestamp to the table
+        if (data.entryTimestamps && data.entryTimestamps.length > 0) {
+          data.entryTimestamps.forEach((timestamp, index) => {
+            const tableRow = document.createElement("tr");
+            tableRow.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${new Date(timestamp.seconds * 1000).toLocaleString()}</td>
+            `;
+            timestampBody.appendChild(tableRow);
+          });
+        } else {
+          const tableRow = document.createElement("tr");
+          tableRow.innerHTML = `
+            <td colspan="2">No timestamps available.</td>
+          `;
+          timestampBody.appendChild(tableRow);
+        }
+
+        // Show the modal
+        modal.style.display = "block";
+      });
     });
   }, (error) => {
     console.error("Error fetching data: ", error);
   });
 }
-
 
 
 // Helper function to format middle initial
