@@ -1,4 +1,3 @@
-// Import the necessary Firebase functions
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
@@ -14,7 +13,55 @@ const firebaseConfig = {
   measurementId: "G-S3X4YSV65S"
 };
 
-// Initialize Firebase
+let sortDirection = 'asc'; // To track the sorting direction
+
+// Function to sort the table based on the clicked column
+function sortTable(tableId, columnIndex) {
+  const table = document.getElementById(tableId);
+  const rows = Array.from(table.rows).slice(1); // Exclude the header row
+  const isAscending = sortDirection === 'asc';
+
+  // Sort rows based on the column index and direction
+  rows.sort((rowA, rowB) => {
+    const cellA = rowA.cells[columnIndex].innerText.trim();
+    const cellB = rowB.cells[columnIndex].innerText.trim();
+
+    const valueA = isNaN(cellA) ? cellA : parseFloat(cellA);
+    const valueB = isNaN(cellB) ? cellB : parseFloat(cellB);
+
+    if (valueA < valueB) {
+      return isAscending ? -1 : 1;
+    } else if (valueA > valueB) {
+      return isAscending ? 1 : -1;
+    } else {
+      return 0;
+    }
+  });
+
+  // Reinsert sorted rows back into the table
+  rows.forEach(row => table.appendChild(row));
+
+  // Update sorting direction for the next click
+  sortDirection = isAscending ? 'desc' : 'asc';
+
+  // Update the sort icon
+  updateSortIcons(tableId, columnIndex);
+}
+
+// Update sort icon based on the sorting direction
+function updateSortIcons(tableId, columnIndex) {
+  const headers = document.querySelectorAll(`#${tableId} th`);
+  headers.forEach((header, index) => {
+    const sortIcon = header.querySelector('.sort-icon');
+    if (index === columnIndex) {
+      sortIcon.classList.remove('asc', 'desc');
+      sortIcon.classList.add(sortDirection);
+    } else {
+      sortIcon.classList.remove('asc', 'desc');
+    }
+  });
+}
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -38,6 +85,16 @@ function formatDate(timestamp) {
     : "None";
 }
 
+function formatMiddleInitial(middleInitial) {
+  return middleInitial ? `${middleInitial.charAt(0).toUpperCase()}.` : "";
+}
+
+function capitalizeSemester(semester) {
+  return semester
+    ? semester.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+    : "N/A";
+}
+
 // Function to fetch and display user data in real-time
 function fetchUserData() {
   const adminBody = document.getElementById("admin-body");
@@ -45,9 +102,6 @@ function fetchUserData() {
   const visitorBody = document.getElementById("visitor-body");
   const studentBody = document.getElementById("student-body");
 
-  const usersRef = collection(db, "LIDC_Users");
-
-  // Get the modal and its elements
   const modal = document.getElementById("timestamp-modal");
   const closeModalBtn = document.querySelector(".close-modal");
   const timestampBody = document.getElementById("timestamp-body");
@@ -66,6 +120,7 @@ function fetchUserData() {
   });
 
   // Listen for real-time updates
+  const usersRef = collection(db, "LIDC_Users");
   onSnapshot(usersRef, (snapshot) => {
     // Clear existing data in all tables
     adminBody.innerHTML = "";
@@ -73,7 +128,6 @@ function fetchUserData() {
     visitorBody.innerHTML = "";
     studentBody.innerHTML = "";
 
-    // Counters for each table
     let adminCount = 1;
     let facultyCount = 1;
     let visitorCount = 1;
@@ -135,13 +189,7 @@ function fetchUserData() {
           <td>${capitalize(data.lastName)}, ${capitalize(data.firstName)} ${formattedMiddleInitial}</td>
           <td>${data.timesEntered || 0}</td>
           <td>${capitalize(data.gender)}</td>
-          <td>
-            ${data.specifySchool 
-              ? data.specifySchool.toUpperCase() 
-              : data.schoolSelect 
-                ? data.schoolSelect.toUpperCase() 
-                : 'None'}
-          </td>
+          <td>${data.specifySchool ? data.specifySchool.toUpperCase() : data.schoolSelect ? data.schoolSelect.toUpperCase() : 'None'}</td>
           <td>${capitalize(data.schoolYear)}</td>
           <td>${capitalizeSemester(data.semester)}</td>
           <td>${data.validUntil || "N/A"}</td>
@@ -149,7 +197,7 @@ function fetchUserData() {
         visitorBody.appendChild(row);
       } else if (patronType === "student") {
         row.innerHTML = `
-         <td>
+          <td>
             <a href="${data.qrCodeURL}" target="_blank">View</a>
           </td>
           <td>${studentCount++}</td>
@@ -173,13 +221,10 @@ function fetchUserData() {
 
       // Add click event listener to the row
       row.addEventListener("click", () => {
-        // Clear the timestamp table
         timestampBody.innerHTML = "";
 
-        // Set the user's name in the modal
         modalUserName.textContent = `${capitalize(data.lastName)}, ${capitalize(data.firstName)} ${formattedMiddleInitial}`;
 
-        // Add each timestamp to the table
         if (data.entryTimestamps && data.entryTimestamps.length > 0) {
           data.entryTimestamps.forEach((timestamp, index) => {
             const tableRow = document.createElement("tr");
@@ -197,7 +242,6 @@ function fetchUserData() {
           timestampBody.appendChild(tableRow);
         }
 
-        // Show the modal
         modal.style.display = "block";
       });
     });
@@ -206,28 +250,44 @@ function fetchUserData() {
   });
 }
 
-
-// Helper function to format middle initial
-function formatMiddleInitial(middleInitial) {
-  return middleInitial ? `${middleInitial.charAt(0).toUpperCase()}.` : "";
-}
-
-// Helper function to capitalize semester and remove dashes
-function capitalizeSemester(semester) {
-  return semester
-    ? semester.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
-    : "N/A";
-}
-
-
-// Enable sorting and export features as required
-function enableSorting() {
-  // Add sorting logic here if needed
-}
-
-// Call the fetchUserData function on page load
+// Enable pagination and sorting on page load
 window.onload = () => {
   fetchUserData();
-  enableSorting();
 };
- 
+
+
+let currentPage = 1;
+const itemsPerPage = 10;
+
+const data = {
+  student: [],
+  faculty: [],
+  admin: [],
+  visitor: [],
+};
+
+function displayTable(type) {
+  const tableContainer = document.getElementById(`${type}-table-container`);
+  const tableBody = document.getElementById(`${type}-body`);
+
+  const paginatedData = data[type].slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  tableBody.innerHTML = paginatedData.map((row, index) => {
+    return `<tr>
+      <td><a href="#" onclick="showTimestamps('${type}', ${index})">View Timestamps</a></td>
+      <td>${index + 1}</td>
+      <td>${row.dateRegistered}</td>
+      <td>${row.idNumber}</td>
+      <td>${row.patronType}</td>
+      <td>${row.name}</td>
+      <td>${row.timesEntered}</td>
+      <td>${row.gender}</td>
+      <td>${row.department || row.office || row.school}</td>
+      <td>${row.schoolYear}</td>
+      <td>${row.semester}</td>
+      <td>${row.idValidity}</td>
+    </tr>`;
+  }).join("");
+
+  updatePagination(type);
+  tableContainer.style.display = "block";
+}

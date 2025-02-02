@@ -18,193 +18,101 @@
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
     />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
     <style>
-      * {
-        &::-webkit-scrollbar {
-          width: 12px;
-          height: 10px;
-        }
-
-        &::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 5px;
-        }
-
-        &::-webkit-scrollbar-thumb {
-          background: #b1b1b1;
-          border-radius: 5px;
-        }
-
-        &::-webkit-scrollbar-thumb:hover {
-          background: #838383;
-        }
-      }
-
-      body {
-        color: #566787;
-        background: #f5f5f5;
-        font-family: "Roboto", sans-serif;
+      /* Enhanced Pagination */
+      #pagination-controls {
         display: flex;
         justify-content: center;
-        min-height: 100vh; /* Ensures the body covers the full viewport height */
-        margin: 40px; /* Removes the margin around the body */
+        margin-top: 20px;
       }
 
-      .table-responsive {
-        margin: 30px 0;
-      }
-      .table-wrapper {
-        width: max-content;
-        min-width: 1500px;
-        background: #fff;
-        padding: 20px;
-        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
-        overflow-x: auto;
-      }
-
-      .table-wrapper::-webkit-scrollbar {
-        width: 12px;
-      }
-
-      .table-wrapper::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 5px;
-      }
-
-      .table-wrapper::-webkit-scrollbar-thumb {
-        background: #b1b1b1;
-        border-radius: 5px;
-      }
-
-      .table-wrapper::-webkit-scrollbar-thumb:hover {
-        background: #838383;
-      }
-
-      .table-title {
-        margin: 0 0 10px;
-        font-size: 22px;
-        padding-bottom: 10px;
-      }
-      table.table th,
-      table.table td {
-        border-color: #e9e9e9;
-      }
-      table.table-striped tbody tr:nth-of-type(odd) {
-        background-color: #fcfcfc;
-      }
-      table.table-striped.table-hover tbody tr:hover {
-        background: #f5f5f5;
-      }
-      .highlight {
-        background-color: yellow; /* Highlight color */
-      }
-      .pagination {
-        float: right;
-        margin: 0 0 5px;
-      }
-      .pagination li a {
-        font-size: 95%;
-        width: 30px;
-        height: 30px;
-        color: #999;
-        margin: 0 2px;
-        line-height: 30px;
-        border-radius: 30px !important;
-        text-align: center;
-        padding: 0;
-      }
-
-      th.ascending::after {
-        content: " ▲";
-      }
-
-      th.descending::after {
-        content: " ▼";
-      }
-
-      table.table td:nth-child(7), /* Select the 6th column (Times Entered) */
-      table.table th:nth-child(7) {
-        /* Also center-align the header */
-        text-align: center;
-      }
-
-      /* Modal Styles */
-      .modal {
-        display: none; /* Hidden by default */
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-      }
-
-      .modal-content {
-        background-color: #fff;
-        margin: 5% auto;
-        padding: 20px;
-        border-radius: 8px;
-        width: 50%; /* Adjust width as needed */
-        max-width: 600px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        animation: fadeIn 0.3s ease-in-out;
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .close-modal {
-        color: #aaa;
-        float: right;
-        font-size: 24px;
-        font-weight: bold;
+      .pagination-btn {
+        margin: 0 5px;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f8f9fa;
         cursor: pointer;
       }
 
-      .close-modal:hover,
-      .close-modal:focus {
-        color: #000;
-        text-decoration: none;
+      .pagination-btn.active {
+        background-color: #007bff;
+        color: #fff;
+        border-color: #007bff;
       }
 
-      #timestamp-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
+      .pagination-btn:hover {
+        background-color: #e9ecef;
       }
 
-      #timestamp-table th,
-      #timestamp-table td {
-        padding: 10px;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
+      /* Enhanced Table Styling */
+      .table-responsive {
+        margin-bottom: 20px;
       }
 
-      #timestamp-table th {
-        background-color: #f5f5f5;
-        font-weight: bold;
+      .table-wrapper {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
-      #timestamp-table tbody tr:hover {
+      .table-title {
+        margin-bottom: 15px;
+      }
+
+      .table-title h2 {
+        margin: 0;
+        font-size: 24px;
+        color: #333;
+      }
+
+      .table-striped tbody tr:nth-of-type(odd) {
         background-color: #f9f9f9;
       }
 
-      #modal-user-name {
+      .table-hover tbody tr:hover {
+        background-color: #f1f1f1;
+      }
+
+      .table-bordered {
+        border: 1px solid #ddd;
+      }
+
+      .table-bordered th,
+      .table-bordered td {
+        border: 1px solid #ddd;
+        padding: 12px;
+      }
+
+      .table-bordered thead th {
+        background-color: #f8f9fa;
         font-weight: bold;
+      }
+
+      /* Highlight Search Results */
+      .highlight {
+        background-color: yellow;
+        font-weight: bold;
+      }
+
+      /* Sorting Indicators */
+      .sort-icon {
+        margin-left: 5px;
+        font-size: 12px;
+      }
+
+      .sort-icon.asc::after {
+        content: "▲";
+      }
+
+      .sort-icon.desc::after {
+        content: "▼";
       }
     </style>
   </head>
@@ -221,8 +129,8 @@
         />
       </div>
 
-      <!-- Modal for displaying timestamps -->
-      <div id="timestamp-modal" class="modal">
+      <!-- Modal for displaying timestamps with pagination -->
+      <div id="timestamp-modal" class="modal" style="display: none">
         <div class="modal-content">
           <span class="close-modal">&times;</span>
           <h3>Entry Timestamps for <span id="modal-user-name"></span></h3>
@@ -230,11 +138,14 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Date and Time</th>
+                <th onclick="sortTable('timestamp-table', 1)">
+                  Date and Time <span class="sort-icon"></span>
+                </th>
               </tr>
             </thead>
             <tbody id="timestamp-body"></tbody>
           </table>
+          <div id="pagination-controls"></div>
         </div>
       </div>
 
@@ -407,7 +318,10 @@
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script
+      type="module"
+      src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+    ></script>
     <script
       type="module"
       src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"
@@ -418,6 +332,68 @@
     ></script>
     <script type="module" src="index.js"></script>
     <script>
+      let currentPage = 1;
+      const rowsPerPage = 10;
+
+      function displayPage(page) {
+        const rows = document.querySelectorAll("#timestamp-body tr");
+        const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+
+        currentPage = page;
+
+        rows.forEach((row, index) => {
+          row.style.display =
+            index >= (page - 1) * rowsPerPage && index < page * rowsPerPage
+              ? ""
+              : "none";
+        });
+        updatePaginationControls(totalPages);
+      }
+
+      function updatePaginationControls(totalPages) {
+        const paginationControls = document.getElementById(
+          "pagination-controls"
+        );
+        paginationControls.innerHTML = "";
+
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = document.createElement("button");
+          btn.textContent = i;
+          btn.className = "pagination-btn";
+          btn.onclick = () => displayPage(i);
+          if (i === currentPage) btn.classList.add("active");
+          paginationControls.appendChild(btn);
+        }
+      }
+
+      function sortTable(tableId, columnIndex) {
+        const table = document.getElementById(tableId);
+        const tbody = table.querySelector("tbody");
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        const ascending = table.dataset.sortOrder !== "asc";
+
+        rows.sort((rowA, rowB) => {
+          const cellA = rowA.cells[columnIndex].innerText.trim();
+          const cellB = rowB.cells[columnIndex].innerText.trim();
+          return ascending
+            ? cellA.localeCompare(cellB)
+            : cellB.localeCompare(cellA);
+        });
+
+        table.dataset.sortOrder = ascending ? "asc" : "desc";
+        tbody.innerHTML = "";
+        rows.forEach((row) => tbody.appendChild(row));
+        displayPage(1);
+
+        // Update sorting icon
+        const sortIcon = table.querySelector(".sort-icon");
+        sortIcon.className = "sort-icon";
+        sortIcon.classList.add(ascending ? "asc" : "desc");
+      }
+
       function toggleTable(type) {
         // Hide all tables
         document.getElementById("student-table-container").style.display =
@@ -498,6 +474,26 @@
           showAllTables(); // Show all tables if no matches found
         }
       }
+
+      // Initialize pagination and sort icons on page load
+      window.onload = function () {
+        // Initialize pagination controls and show the first page
+        displayPage(1);
+
+        // Automatically trigger sorting for the "Date and Time" column (column index 1)
+        sortTable("timestamp-table", 1); // This will sort the table based on the Date and Time column
+
+        // Initialize sort icons for other sortable columns
+        const sortableHeaders = document.querySelectorAll("th[onclick]");
+        sortableHeaders.forEach((header) => {
+          const sortIcon = document.createElement("span");
+          sortIcon.className = "sort-icon";
+          header.appendChild(sortIcon);
+        });
+
+        // Show all tables by default
+        showAllTables();
+      };
     </script>
   </body>
 </html>

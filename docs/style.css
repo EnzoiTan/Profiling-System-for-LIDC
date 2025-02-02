@@ -1,90 +1,197 @@
-/* General Styles */
+* {
+  &::-webkit-scrollbar {
+    width: 12px;
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #b1b1b1;
+    border-radius: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #838383;
+  }
+}
+
+/* Pagination Styles */
+#pagination-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination-btn {
+  margin: 0 5px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.pagination-btn.active {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.pagination-btn:hover {
+  background-color: #e9ecef;
+}
+
+.pagination button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Highlighting Search Matches */
+.highlight {
+  background: yellow;
+  font-weight: bold;
+}
+
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
+  color: #566787;
+  background: #f5f5f5;
+  font-family: "Roboto", sans-serif;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh; /* Ensures the body covers the full viewport height */
+  margin: 40px; /* Removes the margin around the body */
+}
+
+.table-responsive {
+  margin: 30px 0;
+}
+.table-wrapper {
+  width: max-content;
+  min-width: 1500px;
+  background: #fff;
+  padding: 20px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.table-title {
+  margin: 0 0 10px;
+  font-size: 22px;
+  padding-bottom: 10px;
+}
+table.table th,
+table.table td {
+  border-color: #e9e9e9;
+}
+table.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #fcfcfc;
+}
+table.table-striped.table-hover tbody tr:hover {
+  background: #f5f5f5;
+}
+.highlight {
+  background-color: yellow; /* Highlight color */
+}
+.pagination {
+  float: right;
+  margin: 0 0 5px;
+}
+.pagination li a {
+  font-size: 95%;
+  width: 30px;
+  height: 30px;
+  color: #999;
+  margin: 0 2px;
+  line-height: 30px;
+  border-radius: 30px !important;
+  text-align: center;
+  padding: 0;
+}
+
+th.ascending::after {
+  content: " ▲";
+}
+
+th.descending::after {
+  content: " ▼";
+}
+
+table.table td:nth-child(7), /* Select the 6th column (Times Entered) */
+table.table th:nth-child(7) {
+  /* Also center-align the header */
+  text-align: center;
+}
+
+/* Modal Styles */
+.modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 1% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 50%; /* Adjust width as needed */
+  max-width: 600px;
+  height: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
   }
-  
-  /* Container */
-  .container {
-    display: flex;
-    height: 100vh;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  /* Sidebar */
-  .sidebar {
-    width: 250px;
-    background-color: #2c3e50;
-    color: #ecf0f1;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .sidebar h2 {
-    font-size: 20px;
-    margin-bottom: 20px;
-  }
-  
-  .sidebar ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .sidebar ul li {
-    margin: 15px 0;
-  }
-  
-  .sidebar ul li a {
-    color: #ecf0f1;
-    text-decoration: none;
-    font-size: 16px;
-  }
-  
-  .sidebar ul li a.active,
-  .sidebar ul li a:hover {
-    font-weight: bold;
-    color: #3498db;
-  }
-  
-  /* Main Content */
-  .main-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .navbar {
-    background-color: #3498db;
-    color: #fff;
-    padding: 15px;
-    text-align: center;
-  }
-  
-  #content {
-    padding: 20px;
-  }
-  
-  #profile-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  
-  .profile-card {
-    width: 200px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-  }
-  
-  .profile-card h3 {
-    margin: 0 0 10px;
-    font-size: 18px;
-  }
-  
-  .profile-card p {
-    margin: 5px 0;
-    font-size: 14px;
-    color: #555;
-  }
-  
+}
+
+.close-modal {
+  color: #aaa;
+  float: right;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+  color: #000;
+  text-decoration: none;
+}
+
+#timestamp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+#timestamp-table th,
+#timestamp-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+#timestamp-table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}
+
+#timestamp-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+#modal-user-name {
+  font-weight: bold;
+}
