@@ -153,7 +153,7 @@
         ">
       <p style="margin: 0 10px; font-weight: bold">Sort by:</p>
       <button class="btn btn-primary" onclick="toggleTable('student')">
-        Students
+        Student
       </button>
       <button class="btn btn-primary" onclick="toggleTable('faculty')">
         Faculty
@@ -162,7 +162,7 @@
         Admin
       </button>
       <button class="btn btn-primary" onclick="toggleTable('visitor')">
-        Visitors
+        Visitor
       </button>
       <button class="btn btn-primary" onclick="showAllTables()">
         Show All
@@ -351,7 +351,7 @@
         const input = document
           .getElementById("search-input")
           .value.toLowerCase();
-        const tables = ["student", "student", "faculty", "admin", "visitor"];
+        const tables = ["student", "faculty", "admin", "visitor"];
         let tableFound = false;
 
         tables.forEach((table) => {

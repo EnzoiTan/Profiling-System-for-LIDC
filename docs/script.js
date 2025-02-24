@@ -25,18 +25,20 @@ function displayUsers(users) {
     const adminBody = document.getElementById("admin-body");
     const visitorBody = document.getElementById("visitor-body");
 
+    // Clear previous table content
     studentBody.innerHTML = "";
     facultyBody.innerHTML = "";
     adminBody.innerHTML = "";
     visitorBody.innerHTML = "";
 
-    users.forEach(user => {
+    users.forEach((user, index) => {
         const row = document.createElement("tr");
         const formattedMiddleInitial = user.middleInitial ? user.middleInitial.charAt(0).toUpperCase() + "." : "";
         const fullName = `${capitalizeWords(user.lastName)}, ${capitalizeWords(user.firstName)} ${formattedMiddleInitial}`;
+        const rowNumber = index + 1; // Auto-incrementing row number
 
+        // Handling timestamps correctly
         let timestampsArray = [];
-
         try {
             if (Array.isArray(user.timestamps)) {
                 timestampsArray = user.timestamps;
@@ -44,119 +46,76 @@ function displayUsers(users) {
                 timestampsArray = JSON.parse(user.timestamps);
             }
         } catch (error) {
-            console.warn("Invalid JSON format, attempting to parse manually:", user.timestamps);
+            console.warn("Invalid JSON format, attempting manual parse:", user.timestamps);
             timestampsArray = user.timestamps.split(",").map(ts => ts.trim());
         }
 
-        let latestTimestamp = "---"; // Default if no timestamps exist
-        if (timestampsArray.length > 0) {
-            latestTimestamp = formatDate(timestampsArray[0]); // Convert first timestamp to readable format
+        let latestTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---"; // Get latest timestamp
+
+        // Create table row HTML
+        let rowHTML = `
+            <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
+            <td>${rowNumber}</td>
+            <td>${latestTimestamp}</td>
+            <td>${user.libraryIdNo}</td>
+            <td>${capitalizeWords(user.patron)}</td>
+            <td>${fullName}</td>
+            <td>${user.timesEntered || "---"}</td>
+            <td>${capitalizeWords(user.gender) || "---"}</td>
+        `;
+
+        // Patron-specific fields
+        if (user.patron.toLowerCase() === "student") {
+            rowHTML += `
+                <td>${user.department.toUpperCase() || "---"}</td>
+                <td>${user.course || "---"}</td>
+                <td>${user.major || "---"}</td>
+                <td>${user.strand || "---"}</td>
+                <td>${user.grade || "---"}</td>
+            `;
+        } else if (user.patron.toLowerCase() === "faculty") {
+            rowHTML += `
+                <td>${user.collegeSelect.toUpperCase() || "---"}</td>
+            `;
+        } else if (user.patron.toLowerCase() === "admin") {
+            rowHTML += `
+                <td>${user.campusDept || "---"}</td>
+            `;
+        } else if (user.patron.toLowerCase() === "visitor") {
+            rowHTML += `
+                <td>${user.schoolSelect ? user.schoolSelect.toUpperCase() : (user.specifySchool ? user.specifySchool.toUpperCase() : "---")}</td>
+            `;
         }
 
-        // Make sure to use latestTimestamp inside the row HTML
-        row.innerHTML = `
-        <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
-        <td>${user.libraryIdNo}</td>
-        <td>${latestTimestamp}</td>  <!-- FIXED: Now using the correctly defined latestTimestamp -->
-        <td>${user.libraryIdNo}</td>
-        <td>${capitalizeWords(user.patron)}</td>
-        <td>${fullName}</td>
-        <td>${user.timesEntered || "---"}</td>
-        <td>${capitalizeWords(user.gender) || "---"}</td>
-        <td>${user.department ? user.department.toUpperCase() : "---"}</td>
-        <td>${user.course || "---"}</td>
-        <td>${user.major || "---"}</td>
-        <td>${user.strand || "---"}</td>
-        <td>${user.grade || "---"}</td>
-        <td>${user.schoolYear || "---"}</td>
-        <td>${capitalizeSemester(user.semester) || "---"}</td>
-        <td>${user.validUntil || "---"}</td>
-    `;
+        // Common fields for all patrons
+        rowHTML += `
+            <td>${user.schoolYear || "---"}</td>
+            <td>${capitalizeSemester(user.semester) || "---"}</td>
+            <td>${user.validUntil || "---"}</td>
+        `;
 
-        if (user.patron.toLowerCase() === "student") {
-            row.innerHTML = `
-            <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
-            <td>${user.libraryIdNo}</td>
-            <td>${latestTimestamp}</td>
-            <td>${user.libraryIdNo}</td>
-            <td>${capitalizeSemester(user.patron)}</td>
-            <td>${fullName}</td>
-            <td>${user.timesEntered || "---"}</td>
-            <td>${capitalizeSemester(user.gender) || "---"}</td>
-            <td>${user.department.toUpperCase() || "---"}</td>
-            <td>${user.course || "---"}</td>
-            <td>${user.major || "---"}</td>
-            <td>${user.strand || "---"}</td>
-            <td>${user.grade || "---"}</td>
-            <td>${user.schoolYear || "---"}</td>
-            <td>${capitalizeSemester(user.semester) || "---"}</td>
-            <td>${user.validUntil || "---"}</td>
-            `;
-            studentBody.appendChild(row);
-        } else if (user.patron.toLowerCase() === "faculty") {
-            row.innerHTML = `
-            <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
-            <td>${user.libraryIdNo}</td>
-            <td>${latestTimestamp}</td>
-            <td>${user.libraryIdNo}</td>
-            <td>${capitalizeSemester(user.patron)}</td>
-            <td>${fullName}</td>
-            <td>${user.timesEntered || "---"}</td>
-            <td>${capitalizeSemester(user.gender) || "---"}</td>
-            <td>${user.collegeSelect.toUpperCase() || "---"}</td>
-            <td>${user.schoolYear || "---"}</td>
-            <td>${capitalizeSemester(user.semester) || "---"}</td>
-            <td>${user.validUntil || "---"}</td>
-            `;
-            facultyBody.appendChild(row);
-        } else if (user.patron.toLowerCase() === "admin") {
-            row.innerHTML = `
-            <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
-            <td>${user.libraryIdNo}</td>
-            <td>${latestTimestamp}</td>
-            <td>${user.libraryIdNo}</td>
-            <td>${capitalizeSemester(user.patron)}</td>
-            <td>${fullName}</td>
-            <td>${user.timesEntered || "---"}</td>
-            <td>${capitalizeSemester(user.gender) || "---"}</td>
-            <td>${user.campusDept || "---"}</td>
-            <td>${user.schoolYear || "---"}</td>
-            <td>${capitalizeSemester(user.semester) || "---"}</td>
-            <td>${user.validUntil || "---"}</td>
-            `;
-            adminBody.appendChild(row);
-        } else if (user.patron.toLowerCase() === "visitor") {
-            row.innerHTML = `
-            <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
-            <td>${user.libraryIdNo}</td>
-            <td>${latestTimestamp}</td>
-            <td>${user.libraryIdNo}</td>
-            <td>${capitalizeSemester(user.patron)}</td>
-            <td>${fullName}</td>
-            <td>${user.timesEntered || "---"}</td>
-            <td>${capitalizeSemester(user.gender || "---")}</td>
-            <td>${user.schoolSelect ? user.schoolSelect.toUpperCase() : (user.specifySchool ? user.specifySchool.toUpperCase() : "---")}</td>
-            <td>${user.schoolYear || "---"}</td>
-            <td>${capitalizeSemester(user.semester) || "---"}</td>
-            <td>${user.validUntil || "---"}</td>
-            `;
-            visitorBody.appendChild(row);
+        row.innerHTML = rowHTML;
+
+        // Append row to correct table section
+        switch (user.patron.toLowerCase()) {
+            case "student":
+                studentBody.appendChild(row);
+                break;
+            case "faculty":
+                facultyBody.appendChild(row);
+                break;
+            case "admin":
+                adminBody.appendChild(row);
+                break;
+            case "visitor":
+                visitorBody.appendChild(row);
+                break;
         }
 
         // Add click event to open modal with timestamps
         row.addEventListener("click", () => {
             openTimestampModal(user.libraryIdNo, fullName);
         });
-
-        if (user.patron.toLowerCase() === "student") {
-            studentBody.appendChild(row);
-        } else if (user.patron.toLowerCase() === "faculty") {
-            facultyBody.appendChild(row);
-        } else if (user.patron.toLowerCase() === "admin") {
-            adminBody.appendChild(row);
-        } else if (user.patron.toLowerCase() === "visitor") {
-            visitorBody.appendChild(row);
-        }
     });
 }
 
@@ -187,7 +146,7 @@ function formatDate(timestamp) {
         year: "numeric",    // Example: "2024"
         month: "long",      // Example: "February"
         day: "2-digit"      // Example: "19"
-    })
+    });
 }
 
 // Helper functions for formatting
