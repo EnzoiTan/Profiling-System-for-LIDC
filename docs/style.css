@@ -17,6 +17,8 @@
   &::-webkit-scrollbar-thumb:hover {
     background: #838383;
   }
+
+  /* border-radius: 3px; */
 }
 
 /* Pagination Styles */
@@ -62,14 +64,14 @@ body {
   font-family: "Roboto", sans-serif;
   display: flex;
   justify-content: center;
-  min-height: 100vh;
+  min-height: max-content;
   /* Ensures the body covers the full viewport height */
-  margin: 40px;
+  margin: 20px;
   /* Removes the margin around the body */
 }
 
 .table-responsive {
-  margin: 30px 0;
+  margin: 20px 0;
 }
 
 .table-wrapper {
@@ -129,9 +131,9 @@ th.descending::after {
   content: " ▼";
 }
 
-table.table td:nth-child(7),
+table.table td:nth-child(6),
 /* Select the 6th column (Times Entered) */
-table.table th:nth-child(7) {
+table.table th:nth-child(6) {
   /* Also center-align the header */
   text-align: center;
 }
@@ -168,6 +170,205 @@ table.table th:nth-child(7) {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #333;
+  padding-top: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.loading-indicator {
+  text-align: center;
+  font-size: 16px;
+  color: #666;
+  margin: 20px 0;
+}
+
+.sidebar h2 {
+  margin-bottom: 20px;
+}
+
+.sidebar ul {
+  flex-grow: 1;
+  /* Allow the list to grow and take available space */
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  padding: 10px;
+}
+
+h2 {
+  padding-left: 10px;
+  margin: 0;
+}
+
+.sidebar ul li a {
+  text-decoration: none;
+  color: white;
+  font-size: 18px;
+  display: block;
+}
+
+.sidebar ul li a:hover {
+  background: #575757;
+}
+
+.sidebar-img {
+  width: 150px;
+}
+
+/* Adjust main content so it does not overlap */
+.container {
+  margin-left: 270px;
+  /* Adjust based on sidebar width */
+  padding: 20px;
+}
+
+.searchbar {
+  display: flex;
+  width: 30%;
+  border-radius: 3px;
+  padding: 5px;
+  border-color: rgb(209, 209, 209);
+  border-style: solid;
+  border-width: 1px;
+}
+
+.logout-btn {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  background: #e74c3c;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  margin-top: auto;
+  /* Pushes it to the bottom */
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+}
+
+.export-container {
+  position: relative;
+  display: inline-block;
+}
+
+.export-options {
+  display: none;
+  position: absolute;
+  background: white;
+  padding: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  z-index: 100;
+}
+
+.export-container.active .export-options {
+  display: block;
+}
+
+.export-options label,
+.export-options input {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.export-options button {
+  margin-top: 5px;
+}
+
+
+a:hover {
+  text-decoration: none;
+}
+
+.separation1 {
+  width: 100%;
+  display: flex;
+}
+
+.separation2 {
+  width: 100%;
+  display: flex;
+  justify-content: end;
+}
+
+.pagination-text {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.pagination-controls {
+  display: flex;
+  margin-top: 10px;
+  gap: 3px;
+}
+
+.pagination-button {
+  background: none;
+  border: 1px solid #ccc;
+  color: #333;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: 0.2s;
+}
+
+.pagination-button:hover {
+  background: #f1f1f1;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-button.active {
+  background: #333;
+  color: #fff;
+  border-color: #333;
+}
+
+#sortDropdown {
+  margin-right: 10px;
+}
+
+.form-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 0;
+  padding: 0;
+}
+
+#download-btn {
+  background-color: green;
+  color: white;
+  border: none;
+  padding: 5px;
+  width: 100px;
+}
+
+.dropdown {
+  padding: 5px 10px;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  border-radius: 3px;
 }
 
 .close-modal {

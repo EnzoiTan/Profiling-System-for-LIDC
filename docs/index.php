@@ -1,3 +1,11 @@
+<?php
+session_start();
+if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
+  header("Location: login.php");
+  exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,17 +16,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Library Users Database</title>
   <link
-    href="https://fonts.googleapis.com/css?family=Roboto"
+    href="assets/css.css"
     rel="stylesheet" />
   <link
     rel="stylesheet"
-    href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    href="assets/font-awesome.min.css" />
   <link
     rel="stylesheet"
-    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    href="assets/bootstrap.min.css" />
   <link rel="stylesheet" href="style.css" />
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="assets/jquery.min.js"></script>
+  <script src="assets/bootstrap.min.js"></script>
   <style>
     /* Enhanced Pagination */
     #pagination-controls {
@@ -114,15 +122,66 @@
 </head>
 
 <body>
+  <div class="sidebar">
+    <img class="sidebar-img" src="assets/logo.png" alt="">
+    <h2>LCC PROFILING SYSTEM</h2>
+    <ul>
+      <li><a href="#">Home</a></li>
+      <li><a href="borrow">Borrow Books</a></li>
+      <li><a href="#student-table-container">Students</a></li>
+      <li><a href="#faculty-table-container">Faculty</a></li>
+      <li><a href="#admin-table-container">Admin</a></li>
+      <li><a href="#visitor-table-container">Visitors</a></li>
+    </ul>
+    <!-- Logout Button Positioned at the Bottom -->
+    <a href="logout.php" class="logout-btn">Logout</a>
+  </div>
+
   <div class="container">
     <!-- Search Input -->
     <div class="form-group">
-      <input
-        type="text"
-        id="search-input"
-        class="form-control"
-        placeholder="Search..."
-        onkeyup="searchTables()" />
+      <div class="separation1"
+
+        class="btn-group"
+        style="
+          display: flex;
+          margin: 10px 0px 20px 0px;
+          align-items: center;
+          align-items: center;
+        ">
+        <input
+          type="text"
+          id="search-input"
+          class="searchbar"
+          placeholder="Search..."
+          onkeyup="searchTables()" />
+        <p style="margin: 0 10px 0px 20px; font-weight: bold">Sort by:</p>
+        <select id="sortDropdown" onchange="handleSortChange()" class="dropdown">
+          <option value="all">Show All</option>
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="admin">Admin</option>
+          <option value="visitor">Visitor</option>
+        </select>
+
+        <select id="sortMonth" onchange="handleSortChange()" class="dropdown">
+          <option value="all">All Months</option>
+          <option value="01">January</option>
+          <option value="02">February</option>
+          <option value="03">March</option>
+          <option value="04">April</option>
+          <option value="05">May</option>
+          <option value="06">June</option>
+          <option value="07">July</option>
+          <option value="08">August</option>
+          <option value="09">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+      <input type="month" id="month-picker">
+      <button onclick="exportData()">Export</button>
     </div>
 
     <div id="timestamp-modal" class="modal" style="display: none;">
@@ -143,34 +202,7 @@
     </div>
 
     <!-- Patron Type Toggle Buttons -->
-    <div
-      class="btn-group"
-      style="
-          display: flex;
-          margin: 25px 0px 20px 0px;
-          align-items: center;
-          align-items: center;
-        ">
-      <p style="margin: 0 10px; font-weight: bold">Sort by:</p>
-      <button class="btn btn-primary" onclick="toggleTable('student')">
-        Student
-      </button>
-      <button class="btn btn-primary" onclick="toggleTable('faculty')">
-        Faculty
-      </button>
-      <button class="btn btn-primary" onclick="toggleTable('admin')">
-        Admin
-      </button>
-      <button class="btn btn-primary" onclick="toggleTable('visitor')">
-        Visitor
-      </button>
-      <button class="btn btn-primary" onclick="showAllTables()">
-        Show All
-      </button>
-    </div>
 
-    <input type="month" id="month-picker">
-    <button id="download-btn">Export Excel</button>
 
     <!-- Student Table -->
     <div class="table-responsive" id="student-table-container">
@@ -185,7 +217,6 @@
               <th>#</th>
               <th>Date Registered</th>
               <th>ID Number</th>
-              <th>Type of Patron</th>
               <th>Name</th>
               <th>Times Entered</th>
               <th>Gender</th>
@@ -201,6 +232,7 @@
           </thead>
           <tbody id="student-body"></tbody>
         </table>
+        <div id="student-pagination-text" class="pagination-text"></div>
         <div id="student-pagination-controls" class="pagination-controls"></div> <!-- Pagination controls for students -->
       </div>
     </div>
@@ -218,7 +250,6 @@
               <th>#</th>
               <th>Date Registered</th>
               <th>ID Number</th>
-              <th>Type of Patron</th>
               <th>Name</th>
               <th>Times Entered</th>
               <th>Gender</th>
@@ -230,6 +261,7 @@
           </thead>
           <tbody id="faculty-body"></tbody>
         </table>
+        <div id="faculty-pagination-text" class="pagination-text"></div>
         <div id="faculty-pagination-controls" class="pagination-controls"></div> <!-- Pagination controls for faculty -->
       </div>
     </div>
@@ -247,7 +279,6 @@
               <th>#</th>
               <th>Date Registered</th>
               <th>ID Number</th>
-              <th>Type of Patron</th>
               <th>Name</th>
               <th>Times Entered</th>
               <th>Gender</th>
@@ -259,6 +290,7 @@
           </thead>
           <tbody id="admin-body"></tbody>
         </table>
+        <div id="admin-pagination-text" class="pagination-text"></div>
         <div id="admin-pagination-controls" class="pagination-controls"></div> <!-- Pagination controls for admin -->
       </div>
     </div>
@@ -276,7 +308,6 @@
               <th>#</th>
               <th>Date Registered</th>
               <th>ID Number</th>
-              <th>Type of Patron</th>
               <th>Name</th>
               <th>Times Entered</th>
               <th>Gender</th>
@@ -288,11 +319,12 @@
           </thead>
           <tbody id="visitor-body"></tbody>
         </table>
+        <div id="visitor-pagination-text" class="pagination-text"></div>
         <div id="visitor-pagination-controls" class="pagination-controls"></div> <!-- Pagination controls for visitors -->
       </div>
     </div>
 
-    <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script type="module" src="assets/xlsx.full.min.js"></script>
     <script src="script.js" defer></script>
 </body>
 

@@ -39,10 +39,6 @@ function displayUsers(users, type) {
     const tableBody = document.getElementById(`${type}-body`);
     tableBody.innerHTML = "";
 
-    const currentMonthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' }).replace(" ", "_");
-    const timestampsKey = `timestamps_${currentMonthYear}`;
-    const timesEnteredKey = `timesEntered_${currentMonthYear}`;
-
     let start = (currentPage[type] - 1) * rowsPerPage;
     let end = Math.min(start + rowsPerPage, users.length);
     let paginatedUsers = users.slice(start, end);
@@ -54,19 +50,19 @@ function displayUsers(users, type) {
 
         let timestampsArray = [];
         try {
-            timestampsArray = Array.isArray(user[timestampsKey]) ? user[timestampsKey] : JSON.parse(user[timestampsKey]);
+            timestampsArray = Array.isArray(user.timestamps) ? user.timestamps : JSON.parse(user.timestamps);
         } catch (error) {
-            timestampsArray = user[timestampsKey].split(",").map(ts => ts.trim());
+            timestampsArray = user.timestamps.split(",").map(ts => ts.trim());
         }
         let latestTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---";
 
         let rowHTML = `
             <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
             <td>${start + index + 1}</td>
-            <td>${user.timestamps}</td>
+            <td>${latestTimestamp}</td>
             <td>${user.libraryIdNo}</td>
             <td>${fullName}</td>
-            <td>${user[timesEnteredKey] || "---"}</td>
+            <td>${user.timesEntered || "---"}</td>
             <td>${capitalizeWords(user.gender) || "---"}</td>
         `;
 
@@ -191,15 +187,10 @@ function openTimestampModal(id, name) {
 
 function openTimestampModal(libraryIdNo, fullName) {
     document.getElementById("modal-user-name").textContent = fullName;
-
-    const currentMonthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' }).replace(" ", "_");
-    const timestampsKey = `timestamps_${currentMonthYear}`;
-    const timesEnteredKey = `timesEntered_${currentMonthYear}`;
-
-    fetch(`fetch_timestamps.php?libraryIdNo=${libraryIdNo}&timestampsKey=${timestampsKey}&timesEnteredKey=${timesEnteredKey}`)
+    fetch(`fetch_timestamps.php?libraryIdNo=${libraryIdNo}`)
         .then(response => response.json())
         .then(data => {
-            displayTimestamps(data[timestampsKey] || []);
+            displayTimestamps(data);
             document.getElementById("timestamp-modal").style.display = "block";
         })
         .catch(error => console.error("Error fetching timestamps:", error));
@@ -381,22 +372,19 @@ function sortTimestampTable(columnIndex) {
     displayPage(1, rows.length); // Reset to the first page after sorting
 }
 
-function displayTimestamps(timestamps) {
+function displayTimestamps(timestampText) {
     const timestampBody = document.getElementById("timestamp-body");
     timestampBody.innerHTML = "";
 
-    if (!Array.isArray(timestamps)) {
-        console.error("Invalid timestamps data:", timestamps);
-        return;
+    let timestamps = [];
+    try {
+        timestamps = JSON.parse(timestampText); // Parse the stored JSON array
+    } catch (error) {
+        console.error("Error parsing timestamps:", error);
     }
 
     timestamps.forEach((timestamp, index) => {
         let dateObj = new Date(timestamp);
-
-        if (isNaN(dateObj.getTime())) {
-            console.error("Invalid date:", timestamp);
-            return;
-        }
 
         let formattedTimestamp = dateObj.toLocaleString("en-US", {
             weekday: "short", // Mon
@@ -531,4 +519,4 @@ function exportToExcel() {
         return;
     }
     window.location.href = "export.php?month=" + month;
-}
+} 
