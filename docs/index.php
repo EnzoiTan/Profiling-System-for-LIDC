@@ -142,13 +142,7 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     <div class="form-group">
       <div class="separation1"
 
-        class="btn-group"
-        style="
-          display: flex;
-          margin: 10px 0px 20px 0px;
-          align-items: center;
-          align-items: center;
-        ">
+        class="btn-group">
         <input
           type="text"
           id="search-input"
@@ -180,6 +174,13 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
           <option value="12">December</option>
         </select>
       </div>
+      <p style="margin: 0 10px 0px 20px; font-weight: bold">Export Option:</p>
+      <select id="patron-picker">
+        <option value="student">Student</option>
+        <option value="faculty">Faculty</option>
+        <option value="admin">Admin</option>
+        <option value="visitor">Visitor</option>
+      </select>
       <input type="month" id="month-picker">
       <button onclick="exportData()">Export</button>
     </div>

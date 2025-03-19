@@ -4,7 +4,7 @@ let usersData = { student: [], faculty: [], admin: [], visitor: [] };
 
 document.addEventListener("DOMContentLoaded", function () {
     fetchAndUpdateUsers();
-    setInterval(fetchAndUpdateUsers, 5000);
+    // setInterval(fetchAndUpdateUsers, 5000);
 });
 
 function fetchAndUpdateUsers() {
@@ -22,8 +22,10 @@ function fetchAndUpdateUsers() {
 function categorizeUsers(users) {
     usersData = { student: [], faculty: [], admin: [], visitor: [] };
     users.forEach(user => {
-        const type = user.patron.toLowerCase();
-        if (usersData[type]) usersData[type].push(user);
+        const type = user.patron.toLowerCase(); // Ensure `patron` field exists and is lowercase
+        if (usersData[type]) {
+            usersData[type].push(user);
+        }
     });
 }
 
@@ -39,13 +41,39 @@ function displayUsers(users, type) {
     const tableBody = document.getElementById(`${type}-body`);
     tableBody.innerHTML = "";
 
-    const currentMonthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' }).replace(" ", "_");
-    const timestampsKey = `timestamps_${currentMonthYear}`;
-    const timesEnteredKey = `timesEntered_${currentMonthYear}`;
+    const selectedMonth = document.getElementById("sortMonth").value;
+
+    // Filter users based on selected month
+    let filteredUsers = users.filter(user => {
+        if (selectedMonth === "all") return true;
+        const timestampKeys = Object.keys(user).filter(key => key.startsWith('timestamps_'));
+
+        return timestampKeys.some(key => {
+            if (user[key]) {
+                try {
+                    const data = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
+                    return data.some(ts => new Date(ts).toISOString().startsWith(`2025-${selectedMonth}`));
+                } catch (error) {
+                    if (typeof user[key] === 'string') {
+                        return user[key].split(",").some(ts => new Date(ts.trim()).toISOString().startsWith(`2025-${selectedMonth}`));
+                    }
+                }
+            }
+            return false;
+        });
+    });
+
+    // Show "No entries available" if no data is found
+    if (filteredUsers.length === 0) {
+        const noDataRow = document.createElement("tr");
+        noDataRow.innerHTML = `<td colspan="15" class="text-center">No entries available.</td>`;
+        tableBody.appendChild(noDataRow);
+        return;
+    }
 
     let start = (currentPage[type] - 1) * rowsPerPage;
-    let end = Math.min(start + rowsPerPage, users.length);
-    let paginatedUsers = users.slice(start, end);
+    let end = Math.min(start + rowsPerPage, filteredUsers.length);
+    let paginatedUsers = filteredUsers.slice(start, end);
 
     paginatedUsers.forEach((user, index) => {
         const row = document.createElement("tr");
@@ -53,20 +81,36 @@ function displayUsers(users, type) {
         const fullName = `${capitalizeWords(user.lastName)}, ${capitalizeWords(user.firstName)} ${formattedMiddleInitial}`;
 
         let timestampsArray = [];
-        try {
-            timestampsArray = Array.isArray(user[timestampsKey]) ? user[timestampsKey] : JSON.parse(user[timestampsKey]);
-        } catch (error) {
-            timestampsArray = user[timestampsKey].split(",").map(ts => ts.trim());
-        }
-        let latestTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---";
+        const timestampKeys = Object.keys(user).filter(key => key.startsWith('timestamps_'));
+
+        timestampKeys.forEach(key => {
+            if (user[key]) {
+                try {
+                    const data = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
+                    if (Array.isArray(data)) {
+                        timestampsArray.push(...data);
+                    }
+                } catch (error) {
+                    if (typeof user[key] === 'string') {
+                        timestampsArray.push(...user[key].split(",").map(ts => ts.trim()));
+                    }
+                }
+            }
+        });
+
+        timestampsArray.sort((a, b) => new Date(b) - new Date(a));
+        const latestTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---";
+
+        // Calculate times entered based on the timestamps
+        const timesEntered = timestampsArray.length; // Count of timestamps
 
         let rowHTML = `
             <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
             <td>${start + index + 1}</td>
-            <td>${user.timestamps}</td>
+            <td>${latestTimestamp}</td>
             <td>${user.libraryIdNo}</td>
             <td>${fullName}</td>
-            <td>${user[timesEnteredKey] || "---"}</td>
+            <td>${timesEntered || "---"}</td> <!-- Update this line -->
             <td>${capitalizeWords(user.gender) || "---"}</td>
         `;
 
@@ -95,27 +139,71 @@ function displayUsers(users, type) {
         row.innerHTML = rowHTML;
         tableBody.appendChild(row);
 
+        // Add event listener to open the modal
         row.addEventListener("click", () => {
             openTimestampModal(user.libraryIdNo, fullName);
         });
     });
-
-    updatePaginationText(users.length, type);
 }
 
-function updatePaginationText(totalEntries, type) {
-    const paginationTextContainer = document.getElementById(`${type}-pagination-text`);
-    let start = (currentPage[type] - 1) * rowsPerPage + 1;
-    let end = Math.min(start + rowsPerPage - 1, totalEntries);
+// function updatePaginationText(totalEntries, type, users) {
+//     const paginationTextContainer = document.getElementById(`${type}-pagination-text`);
+//     let start = (currentPage[type] - 1) * rowsPerPage + 1;
+//     let end = Math.min(start + rowsPerPage - 1, totalEntries);
 
-    if (totalEntries === 0) {
-        paginationTextContainer.innerHTML = "No entries available.";
-    } else {
-        paginationTextContainer.innerHTML = `
-            Showing ${start} to ${end} of ${totalEntries} entries
-        `;
-    }
-}
+//     const selectedMonth = document.getElementById("sortMonth").value;
+//     const monthlyPatronCount = {};
+
+//     if (users) {
+//         users.forEach(user => {
+//             const timestampKeys = Object.keys(user).filter(key => key.startsWith('timestamps_'));
+
+//             const hasEntryInMonth = timestampKeys.some(key => {
+//                 if (user[key]) {
+//                     try {
+//                         const data = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
+//                         return data.some(ts => {
+//                             const entryDate = new Date(ts);
+//                             return selectedMonth === "all" || entryDate.toISOString().startsWith(`2025-${selectedMonth}`);
+//                         });
+//                     } catch (error) {
+//                         if (typeof user[key] === 'string') {
+//                             return user[key].split(",").some(ts => {
+//                                 const entryDate = new Date(ts.trim());
+//                                 return selectedMonth === "all" || entryDate.toISOString().startsWith(`2025-${selectedMonth}`);
+//                             });
+//                         }
+//                     }
+//                 }
+//                 return false;
+//             });
+
+//             if (hasEntryInMonth) {
+//                 const monthYear = selectedMonth === "all"
+//                     ? "All Months"
+//                     : new Date(`2025-${selectedMonth}-01`).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+//                 monthlyPatronCount[monthYear] = (monthlyPatronCount[monthYear] || 0) + 1;
+//             }
+//         });
+//     }
+
+//     const monthlyCountsText = Object.entries(monthlyPatronCount)
+//         .map(([month, count]) => `${month}: ${count}`)
+//         .join(" | ");
+
+//     const noDataMessage = Object.keys(monthlyPatronCount).length === 0 ? "No data for selected month" : "";
+
+//     if (totalEntries === 0) {
+//         paginationTextContainer.innerHTML = "No entries available.";
+//     } else {
+//         paginationTextContainer.innerHTML = `Showing ${start} to ${end} of ${totalEntries} entries
+//             <br>
+//             (${monthlyCountsText || noDataMessage})
+//         `;
+//     }
+// }
+
 
 function createPaginationControls(users, type) {
     const paginationContainer = document.getElementById(`${type}-pagination-controls`);
@@ -192,18 +280,31 @@ function openTimestampModal(id, name) {
 function openTimestampModal(libraryIdNo, fullName) {
     document.getElementById("modal-user-name").textContent = fullName;
 
-    const currentMonthYear = new Date().toLocaleString('default', { month: 'long', year: 'numeric' }).replace(" ", "_");
-    const timestampsKey = `timestamps_${currentMonthYear}`;
-    const timesEnteredKey = `timesEntered_${currentMonthYear}`;
-
-    fetch(`fetch_timestamps.php?libraryIdNo=${libraryIdNo}&timestampsKey=${timestampsKey}&timesEnteredKey=${timesEnteredKey}`)
-        .then(response => response.json())
+    fetch(`fetch_timestamps.php?libraryIdNo=${libraryIdNo}`)
+        .then(response => response.text())
         .then(data => {
-            displayTimestamps(data[timestampsKey] || []);
-            document.getElementById("timestamp-modal").style.display = "block";
+            console.log("Raw response:", data);
+
+            try {
+                const jsonData = JSON.parse(data);
+
+                // Gather all timestamps into one array
+                const allTimestamps = [];
+                Object.keys(jsonData).forEach(key => {
+                    if (key.startsWith("timestamps_") && Array.isArray(jsonData[key])) {
+                        allTimestamps.push(...jsonData[key]);
+                    }
+                });
+
+                displayTimestamps(allTimestamps);
+                document.getElementById("timestamp-modal").style.display = "block";
+            } catch (error) {
+                console.error("Error parsing JSON:", error);
+            }
         })
         .catch(error => console.error("Error fetching timestamps:", error));
 }
+
 
 // Format timestamp properly
 function formatDate(timestamp) {
@@ -286,11 +387,32 @@ function showAllTables() {
 }
 
 function searchTables() {
-    const input = document
-        .getElementById("search-input")
-        .value.toLowerCase();
+    const input = document.getElementById("search-input").value.toLowerCase();
     const tables = ["student", "faculty", "admin", "visitor"];
     let tableFound = false;
+
+    if (input === "") {
+        // If the search bar is cleared, reapply the last filter state
+        tables.forEach((table) => {
+            const tbody = document.getElementById(table + "-body");
+            const rows = tbody.getElementsByTagName("tr");
+
+            // Reset all rows and remove any highlights
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName("td");
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j]) {
+                        // Remove any <span> tags and reset the content
+                        cells[j].innerHTML = cells[j].textContent || cells[j].innerText;
+                    }
+                }
+                rows[i].style.display = ""; // Show all rows
+            }
+        });
+
+        handleSortChange(); // Reapply the last filter state
+        return;
+    }
 
     tables.forEach((table) => {
         const tbody = document.getElementById(table + "-body");
@@ -325,11 +447,9 @@ function searchTables() {
 
         if (tableHasMatches) {
             tableFound = true;
-            document.getElementById(table + "-table-container").style.display =
-                "block";
+            document.getElementById(table + "-table-container").style.display = "block";
         } else {
-            document.getElementById(table + "-table-container").style.display =
-                "none";
+            document.getElementById(table + "-table-container").style.display = "none";
         }
     });
 
@@ -431,10 +551,10 @@ function displayTimestamps(timestamps) {
 }
 
 function handleSortChange() {
-    let selectedType = document.getElementById("sortDropdown").value.toLowerCase();
-    let selectedMonth = document.getElementById("sortMonth").value;
+    const selectedType = document.getElementById("sortDropdown").value.toLowerCase();
+    const selectedMonth = document.getElementById("sortMonth").value;
 
-    let tables = {
+    const tables = {
         student: document.getElementById("student-table-container"),
         faculty: document.getElementById("faculty-table-container"),
         admin: document.getElementById("admin-table-container"),
@@ -444,35 +564,29 @@ function handleSortChange() {
     let hasVisibleRows = false;
 
     Object.keys(tables).forEach(type => {
-        let tableContainer = tables[type];
-        let rows = tableContainer.querySelectorAll("tbody tr");
-        let tbody = tableContainer.querySelector("tbody");
+        const tableContainer = tables[type];
+        const rows = tableContainer.querySelectorAll("tbody tr");
+        const tbody = tableContainer.querySelector("tbody");
         let showTable = false;
 
-        // Hide all tables except the selected one
-        if (selectedType !== "all" && type !== selectedType) {
-            tableContainer.style.display = "none";
-            return;
-        }
-
         // Reset "No data yet" message
-        let noDataRow = tbody.querySelector(".no-data-row");
+        const noDataRow = tbody.querySelector(".no-data-row");
         if (noDataRow) noDataRow.remove();
 
         rows.forEach(row => {
-            let patronType = row.querySelector("td:nth-child(5)")?.textContent.trim().toLowerCase(); // Type of Patron column
-            let dateRegistered = row.querySelector("td:nth-child(3)")?.textContent.trim(); // Date Registered column
+            const patronType = type; // Use the current table type
+            const dateRegistered = row.querySelector("td:nth-child(3)")?.textContent.trim(); // Date Registered column
 
             let rowMonth = "";
             if (dateRegistered) {
-                let dateObj = new Date(dateRegistered);
+                const dateObj = new Date(dateRegistered);
                 if (!isNaN(dateObj.getTime())) {
                     rowMonth = ("0" + (dateObj.getMonth() + 1)).slice(-2); // Get month as 2-digit
                 }
             }
 
-            let monthMatch = selectedMonth === "all" || rowMonth === selectedMonth;
-            let typeMatch = selectedType === "all" || patronType === selectedType;
+            const monthMatch = selectedMonth === "all" || rowMonth === selectedMonth;
+            const typeMatch = selectedType === "all" || selectedType === patronType;
 
             if (monthMatch && typeMatch) {
                 row.style.display = ""; // Show row
@@ -483,9 +597,29 @@ function handleSortChange() {
             }
         });
 
-        // Ensure only the selected table is visible
-        tableContainer.style.display = "block";
+        // Show or hide the table based on whether it has visible rows
+        tableContainer.style.display = showTable ? "block" : "none";
+
+        // Add "No data yet" message if no rows are visible
+        // if (!showTable) {
+        //     const noDataMessage = document.createElement("tr");
+        //     noDataMessage.classList.add("no-data-row");
+        //     noDataMessage.innerHTML = `<td colspan="15" class="text-center">No data available for the selected filters.</td>`;
+        //     tbody.appendChild(noDataMessage);
+        // }
     });
+
+    // If no rows are visible in any table, show all tables with "No data yet" messages
+    if (!hasVisibleRows) {
+        Object.values(tables).forEach(table => {
+            table.style.display = "block";
+            const tbody = table.querySelector("tbody");
+            const noDataMessage = document.createElement("tr");
+            noDataMessage.classList.add("no-data-row");
+            noDataMessage.innerHTML = `<td colspan="15" class="text-center">No data available for the selected filters.</td>`;
+            tbody.appendChild(noDataMessage);
+        });
+    }
 }
 
 function toggleSidebar() {
@@ -524,11 +658,119 @@ function displayPage(page, totalTimestamps) {
     });
 }
 
-function exportToExcel() {
-    let month = document.getElementById("month-picker").value;
-    if (!month) {
-        alert("Please select a month.");
+function exportData() {
+    const monthPicker = document.getElementById("month-picker").value;
+    const patronPicker = document.getElementById("patron-picker").value;
+
+    const selectedMonth = monthPicker.split("-")[1];
+    const selectedYear = monthPicker.split("-")[0];
+
+    const tables = {
+        student: {
+            title: "Student Details",
+            headers: ["No.", "Name", "Department", "Course", "Major", "Grade", "Strand", "Gender", "Times Entered"]
+        },
+        faculty: {
+            title: "Faculty Details",
+            headers: ["No.", "Name", "College/Department", "Gender", "Times Entered"]
+        },
+        admin: {
+            title: "Admin Details",
+            headers: ["No.", "Name", "Office", "Gender", "Times Entered"]
+        },
+        visitor: {
+            title: "Visitor Details",
+            headers: ["No.", "Name", "School", "Gender", "Times Entered"]
+        }
+    };
+
+    const table = tables[patronPicker];
+    if (!table) {
+        console.error("Export is not configured for the selected patron type.");
         return;
     }
-    window.location.href = "export.php?month=" + month;
+
+    const tbody = document.getElementById(`${patronPicker}-body`);
+    const rows = tbody.getElementsByTagName("tr");
+
+    const exportData = [];
+    if (rows.length > 0) {
+        exportData.push(table.headers);
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName("td");
+        const dateRegistered = cells[2]?.textContent.trim();
+
+        if (dateRegistered) {
+            const dateObj = new Date(dateRegistered);
+            const rowMonth = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+            const rowYear = dateObj.getFullYear().toString();
+
+            if (rowMonth === selectedMonth && rowYear === selectedYear) {
+                let rowData = [];
+
+                if (patronPicker === "student") {
+                    rowData = [
+                        i + 1,                                // No.
+                        cells[4]?.textContent.trim(),         // Name
+                        cells[7]?.textContent.trim(),         // Department
+                        cells[8]?.textContent.trim(),         // Course
+                        cells[9]?.textContent.trim(),         // Major
+                        cells[11]?.textContent.trim() || "---",// Grade
+                        cells[10]?.textContent.trim() || "---",// Strand
+                        cells[6]?.textContent.trim(),         // Gender
+                        cells[5]?.textContent.trim()          // Times Entered
+                    ];
+                } else {
+                    rowData = [
+                        i + 1,                               // No.
+                        cells[4]?.textContent.trim(),        // Name
+                        cells[7]?.textContent.trim(),        // Department / College / Office / School
+                        cells[6]?.textContent.trim(),        // Gender
+                        cells[5]?.textContent.trim()         // Times Entered
+                    ];
+                }
+
+                exportData.push(rowData);
+            }
+        }
+    }
+
+    if (exportData.length === 0) {
+        console.warn("No data available for the selected month and patron type.");
+        return;
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+
+    const columnWidths = exportData[0].map((_, colIndex) => {
+        const maxLength = exportData.reduce((max, row) => {
+            const cell = row[colIndex] || "";
+            return Math.max(max, cell.toString().length);
+        }, 0);
+        return { wch: maxLength + 2 };
+    });
+    ws["!cols"] = columnWidths;
+
+    ws["!cols"][0] = { wch: 5, alignment: { horizontal: "center" } }; // Center-align "No."
+    ws["!cols"][8] = { wch: 15, alignment: { horizontal: "center" } }; // Center-align "Times Entered"
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Exported Data");
+
+    const fileName = `${table.title.replace(" ", "_")}_${selectedYear}-${selectedMonth}.xlsx`;
+
+    // Secure download method to prevent "Insecure Download Blocked" warning
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(link.href);
 }
