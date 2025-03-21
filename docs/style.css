@@ -207,6 +207,11 @@ table.table th:nth-child(6) {
   padding: 10px;
 }
 
+.highlight {
+  background-color: yellow;
+  font-weight: bold;
+}
+
 h2 {
   margin: 0;
 }

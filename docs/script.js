@@ -4,19 +4,54 @@ let usersData = { student: [], faculty: [], admin: [], visitor: [] };
 
 document.addEventListener("DOMContentLoaded", function () {
     fetchAndUpdateUsers();
-    // setInterval(fetchAndUpdateUsers, 5000);
+    setInterval(fetchAndUpdateUsers, 5000); // Fetch new data every 5 seconds
 });
 
 function fetchAndUpdateUsers() {
+    const currentSearch = document.getElementById("search-input").value.toLowerCase(); // Capture current search term
+    const currentSort = getCurrentSortState(); // Capture current sort state
+
     fetch("fetch_users.php")
         .then(response => response.json())
         .then(data => {
             if (JSON.stringify(usersData) !== JSON.stringify(data)) {
                 categorizeUsers(data);
                 updateTableAndPagination();
+
+                applySearchState(currentSearch); // Reapply search term
+                applySortState(currentSort); // Reapply sort state
             }
         })
         .catch(error => console.error("Error fetching data:", error));
+}
+
+function getCurrentSortState() {
+    const sortableHeaders = document.querySelectorAll("th[onclick]");
+    let sortState = null;
+
+    sortableHeaders.forEach((header, index) => {
+        const sortIcon = header.querySelector(".sort-icon");
+        if (sortIcon && sortIcon.classList.contains("asc")) {
+            sortState = { columnIndex: index, order: "asc" };
+        } else if (sortIcon && sortIcon.classList.contains("desc")) {
+            sortState = { columnIndex: index, order: "desc" };
+        }
+    });
+
+    return sortState;
+}
+
+function applySortState(sortState) {
+    if (sortState) {
+        sortTable("student-table", sortState.columnIndex, sortState.order);
+    }
+}
+
+function applySearchState(searchTerm) {
+    if (searchTerm) {
+        document.getElementById("search-input").value = searchTerm;
+        searchTables(); // Reapply the search
+    }
 }
 
 function categorizeUsers(users) {
@@ -41,30 +76,8 @@ function displayUsers(users, type) {
     const tableBody = document.getElementById(`${type}-body`);
     tableBody.innerHTML = "";
 
-    const selectedMonth = document.getElementById("sortMonth").value;
-
-    // Filter users based on selected month
-    let filteredUsers = users.filter(user => {
-        if (selectedMonth === "all") return true;
-        const timestampKeys = Object.keys(user).filter(key => key.startsWith('timestamps_'));
-
-        return timestampKeys.some(key => {
-            if (user[key]) {
-                try {
-                    const data = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
-                    return data.some(ts => new Date(ts).toISOString().startsWith(`2025-${selectedMonth}`));
-                } catch (error) {
-                    if (typeof user[key] === 'string') {
-                        return user[key].split(",").some(ts => new Date(ts.trim()).toISOString().startsWith(`2025-${selectedMonth}`));
-                    }
-                }
-            }
-            return false;
-        });
-    });
-
     // Show "No entries available" if no data is found
-    if (filteredUsers.length === 0) {
+    if (users.length === 0) {
         const noDataRow = document.createElement("tr");
         noDataRow.innerHTML = `<td colspan="15" class="text-center">No entries available.</td>`;
         tableBody.appendChild(noDataRow);
@@ -72,8 +85,8 @@ function displayUsers(users, type) {
     }
 
     let start = (currentPage[type] - 1) * rowsPerPage;
-    let end = Math.min(start + rowsPerPage, filteredUsers.length);
-    let paginatedUsers = filteredUsers.slice(start, end);
+    let end = Math.min(start + rowsPerPage, users.length);
+    let paginatedUsers = users.slice(start, end);
 
     paginatedUsers.forEach((user, index) => {
         const row = document.createElement("tr");
@@ -81,7 +94,7 @@ function displayUsers(users, type) {
         const fullName = `${capitalizeWords(user.lastName)}, ${capitalizeWords(user.firstName)} ${formattedMiddleInitial}`;
 
         let timestampsArray = [];
-        const timestampKeys = Object.keys(user).filter(key => key.startsWith('timestamps_'));
+        const timestampKeys = Object.keys(user).filter(key => key.startsWith("timestamps_"));
 
         timestampKeys.forEach(key => {
             if (user[key]) {
@@ -110,7 +123,7 @@ function displayUsers(users, type) {
             <td>${latestTimestamp}</td>
             <td>${user.libraryIdNo}</td>
             <td>${fullName}</td>
-            <td>${timesEntered || "---"}</td> <!-- Update this line -->
+            <td>${timesEntered || "---"}</td>
             <td>${capitalizeWords(user.gender) || "---"}</td>
         `;
 
@@ -334,29 +347,28 @@ function capitalizeSemester(semester) {
     return semester ? semester.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) : "N/A";
 }
 
-function sortTable(tableId, columnIndex) {
+function sortTable(tableId, columnIndex, order = null) {
     const table = document.getElementById(tableId);
     const tbody = table.querySelector("tbody");
     const rows = Array.from(tbody.querySelectorAll("tr"));
-    const ascending = table.dataset.sortOrder !== "asc";
+    const ascending = order ? order === "asc" : table.dataset.sortOrder !== "asc";
 
     rows.sort((rowA, rowB) => {
         const cellA = rowA.cells[columnIndex].innerText.trim();
         const cellB = rowB.cells[columnIndex].innerText.trim();
-        return ascending ?
-            cellA.localeCompare(cellB) :
-            cellB.localeCompare(cellA);
+        return ascending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
     });
 
     table.dataset.sortOrder = ascending ? "asc" : "desc";
     tbody.innerHTML = "";
-    rows.forEach((row) => tbody.appendChild(row));
-    displayPage(1);
+    rows.forEach(row => tbody.appendChild(row));
 
     // Update sorting icon
     const sortIcon = table.querySelector(".sort-icon");
-    sortIcon.className = "sort-icon";
-    sortIcon.classList.add(ascending ? "asc" : "desc");
+    if (sortIcon) {
+        sortIcon.className = "sort-icon";
+        sortIcon.classList.add(ascending ? "asc" : "desc");
+    }
 }
 
 function toggleTable(type) {
@@ -386,77 +398,97 @@ function showAllTables() {
         "block";
 }
 
+let lastState = {
+    currentPage: { ...currentPage }, // Save the current page for each table
+    sortState: getCurrentSortState(), // Save the current sort state
+};
+
 function searchTables() {
     const input = document.getElementById("search-input").value.toLowerCase();
     const tables = ["student", "faculty", "admin", "visitor"];
     let tableFound = false;
 
     if (input === "") {
-        // If the search bar is cleared, reapply the last filter state
-        tables.forEach((table) => {
-            const tbody = document.getElementById(table + "-body");
-            const rows = tbody.getElementsByTagName("tr");
-
-            // Reset all rows and remove any highlights
-            for (let i = 0; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName("td");
-                for (let j = 0; j < cells.length; j++) {
-                    if (cells[j]) {
-                        // Remove any <span> tags and reset the content
-                        cells[j].innerHTML = cells[j].textContent || cells[j].innerText;
-                    }
-                }
-                rows[i].style.display = ""; // Show all rows
-            }
+        // If the search bar is cleared, reset to the original dataset
+        tables.forEach((type) => {
+            displayUsers(usersData[type], type); // Display all users for this type
+            createPaginationControls(usersData[type], type); // Reset pagination
         });
 
-        handleSortChange(); // Reapply the last filter state
+        // Restore the last pagination and sort state
+        currentPage = { ...lastState.currentPage };
+        applySortState(lastState.sortState);
+
+        // Display the last viewed page for each table
+        tables.forEach((type) => {
+            displayUsers(usersData[type], type);
+            createPaginationControls(usersData[type], type);
+        });
+
+        removeHighlights(); // Remove highlights when search is cleared
         return;
     }
 
-    tables.forEach((table) => {
-        const tbody = document.getElementById(table + "-body");
-        const rows = tbody.getElementsByTagName("tr");
-        let tableHasMatches = false;
+    // Save the current state before searching
+    lastState = {
+        currentPage: { ...currentPage },
+        sortState: getCurrentSortState(),
+    };
 
-        for (let i = 0; i < rows.length; i++) {
-            const cells = rows[i].getElementsByTagName("td");
-            let rowContainsSearchTerm = false;
-
-            for (let j = 0; j < cells.length; j++) {
-                if (cells[j]) {
-                    const cellText = cells[j].textContent || cells[j].innerText;
-                    if (cellText.toLowerCase().indexOf(input) > -1) {
-                        rowContainsSearchTerm = true;
-                        tableHasMatches = true;
-                        // Highlight the matching text
-                        const regex = new RegExp(`(${input})`, "gi");
-                        cells[j].innerHTML = cellText.replace(
-                            regex,
-                            '<span class="highlight">$1</span>'
-                        );
-                    } else {
-                        // Reset the cell content if it doesn't match
-                        cells[j].innerHTML = cellText;
-                    }
+    tables.forEach((type) => {
+        const filteredUsers = usersData[type].filter((user) => {
+            // Check if any field in the user object matches the search term
+            return Object.values(user).some((value) => {
+                if (typeof value === "string") {
+                    return value.toLowerCase().includes(input);
                 }
-            }
+                return false;
+            });
+        });
 
-            rows[i].style.display = rowContainsSearchTerm ? "" : "none";
-        }
-
-        if (tableHasMatches) {
+        if (filteredUsers.length > 0) {
             tableFound = true;
-            document.getElementById(table + "-table-container").style.display = "block";
+            currentPage[type] = 1; // Reset to the first page for the filtered results
+            displayUsers(filteredUsers, type); // Display filtered users
+            createPaginationControls(filteredUsers, type); // Update pagination for filtered results
+            highlightMatches(type, input); // Highlight matches in the table
         } else {
-            document.getElementById(table + "-table-container").style.display = "none";
+            // If no matches, clear the table and show "No entries available"
+            const tableBody = document.getElementById(`${type}-body`);
+            tableBody.innerHTML = `<tr><td colspan="15" class="text-center">No entries available.</td></tr>`;
+            document.getElementById(`${type}-pagination-controls`).innerHTML = ""; // Clear pagination
         }
     });
 
-    // If no table has matches, hide all tables
     if (!tableFound) {
-        showAllTables(); // Show all tables if no matches found
+        console.warn("No matches found for the search term.");
     }
+}
+
+function highlightMatches(type, searchTerm) {
+    const tableBody = document.getElementById(`${type}-body`);
+    const rows = tableBody.querySelectorAll("tr");
+
+    rows.forEach((row) => {
+        const cells = row.querySelectorAll("td");
+        cells.forEach((cell) => {
+            const text = cell.textContent || "";
+            if (text.toLowerCase().includes(searchTerm)) {
+                const regex = new RegExp(`(${searchTerm})`, "gi");
+                cell.innerHTML = text.replace(regex, '<span class="highlight">$1</span>');
+            } else {
+                cell.innerHTML = text; // Reset cell content if no match
+            }
+        });
+    });
+}
+
+function removeHighlights() {
+    const highlightedElements = document.querySelectorAll(".highlight");
+    highlightedElements.forEach((element) => {
+        element.classList.remove("highlight");
+        element.outerHTML = element.textContent; // Replace the highlighted element with plain text
+    });
 }
 
 // Initialize pagination and sort icons on page load
@@ -690,60 +722,79 @@ function exportData() {
         return;
     }
 
-    const tbody = document.getElementById(`${patronPicker}-body`);
-    const rows = tbody.getElementsByTagName("tr");
-
+    const allUsers = usersData[patronPicker]; // Get the entire dataset for the selected patron type
     const exportData = [];
-    if (rows.length > 0) {
-        exportData.push(table.headers);
-    }
 
-    for (let i = 0; i < rows.length; i++) {
-        const cells = rows[i].getElementsByTagName("td");
-        const dateRegistered = cells[2]?.textContent.trim();
+    // Add headers
+    exportData.push(table.headers);
 
-        if (dateRegistered) {
-            const dateObj = new Date(dateRegistered);
-            const rowMonth = ("0" + (dateObj.getMonth() + 1)).slice(-2);
-            const rowYear = dateObj.getFullYear().toString();
+    let rowCounter = 1; // Start sequential numbering
 
-            if (rowMonth === selectedMonth && rowYear === selectedYear) {
-                let rowData = [];
+    // Filter and process the entire dataset
+    allUsers.forEach((user) => {
+        const timestampsArray = [];
+        const timestampKeys = Object.keys(user).filter(key => key.startsWith("timestamps_"));
 
-                if (patronPicker === "student") {
-                    rowData = [
-                        i + 1,                                // No.
-                        cells[4]?.textContent.trim(),         // Name
-                        cells[7]?.textContent.trim(),         // Department
-                        cells[8]?.textContent.trim(),         // Course
-                        cells[9]?.textContent.trim(),         // Major
-                        cells[11]?.textContent.trim() || "---",// Grade
-                        cells[10]?.textContent.trim() || "---",// Strand
-                        cells[6]?.textContent.trim(),         // Gender
-                        cells[5]?.textContent.trim()          // Times Entered
-                    ];
-                } else {
-                    rowData = [
-                        i + 1,                               // No.
-                        cells[4]?.textContent.trim(),        // Name
-                        cells[7]?.textContent.trim(),        // Department / College / Office / School
-                        cells[6]?.textContent.trim(),        // Gender
-                        cells[5]?.textContent.trim()         // Times Entered
-                    ];
+        timestampKeys.forEach(key => {
+            if (user[key]) {
+                try {
+                    const data = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
+                    if (Array.isArray(data)) {
+                        timestampsArray.push(...data);
+                    }
+                } catch (error) {
+                    if (typeof user[key] === "string") {
+                        timestampsArray.push(...user[key].split(",").map(ts => ts.trim()));
+                    }
                 }
-
-                exportData.push(rowData);
             }
-        }
-    }
+        });
 
-    if (exportData.length === 0) {
+        timestampsArray.sort((a, b) => new Date(b) - new Date(a));
+        const latestTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---";
+
+        const rowMonth = latestTimestamp ? ("0" + (new Date(latestTimestamp).getMonth() + 1)).slice(-2) : null;
+        const rowYear = latestTimestamp ? new Date(latestTimestamp).getFullYear().toString() : null;
+
+        // Check if the row matches the selected month and year
+        if (selectedMonth === "all" || (rowMonth === selectedMonth && rowYear === selectedYear)) {
+            let rowData = [];
+
+            if (patronPicker === "student") {
+                rowData = [
+                    rowCounter++, // Sequential numbering
+                    `${capitalizeWords(user.lastName)}, ${capitalizeWords(user.firstName)} ${user.middleInitial ? user.middleInitial.charAt(0).toUpperCase() + "." : ""}`, // Name
+                    user.department?.toUpperCase() || "---", // Department
+                    user.course || "---", // Course
+                    user.major || "---", // Major
+                    user.grade || "---", // Grade
+                    user.strand || "---", // Strand
+                    capitalizeWords(user.gender) || "---", // Gender
+                    timestampsArray.length // Times Entered
+                ];
+            } else {
+                rowData = [
+                    rowCounter++, // Sequential numbering
+                    `${capitalizeWords(user.lastName)}, ${capitalizeWords(user.firstName)} ${user.middleInitial ? user.middleInitial.charAt(0).toUpperCase() + "." : ""}`, // Name
+                    user.collegeSelect?.toUpperCase() || user.campusDept || user.schoolSelect?.toUpperCase() || "---", // Department/College/Office/School
+                    capitalizeWords(user.gender) || "---", // Gender
+                    timestampsArray.length // Times Entered
+                ];
+            }
+
+            exportData.push(rowData);
+        }
+    });
+
+    if (exportData.length === 1) {
         console.warn("No data available for the selected month and patron type.");
         return;
     }
 
+    // Generate Excel file using SheetJS (xlsx library)
     const ws = XLSX.utils.aoa_to_sheet(exportData);
 
+    // Dynamically calculate column widths based on the content
     const columnWidths = exportData[0].map((_, colIndex) => {
         const maxLength = exportData.reduce((max, row) => {
             const cell = row[colIndex] || "";
@@ -753,8 +804,17 @@ function exportData() {
     });
     ws["!cols"] = columnWidths;
 
-    ws["!cols"][0] = { wch: 5, alignment: { horizontal: "center" } }; // Center-align "No."
-    ws["!cols"][8] = { wch: 15, alignment: { horizontal: "center" } }; // Center-align "Times Entered"
+    // Apply center alignment for "No." and "Times Entered" columns
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+
+    for (let row = range.s.r; row <= range.e.r; row++) {
+        ["A", "I"].forEach((col) => { // "A" is No., "I" is Times Entered
+            const cellRef = col + (row + 1);
+            if (ws[cellRef]) {
+                ws[cellRef].s = { alignment: { horizontal: "center" } };
+            }
+        });
+    }
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Exported Data");
@@ -762,8 +822,8 @@ function exportData() {
     const fileName = `${table.title.replace(" ", "_")}_${selectedYear}-${selectedMonth}.xlsx`;
 
     // Secure download method to prevent "Insecure Download Blocked" warning
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
 
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -774,3 +834,4 @@ function exportData() {
 
     URL.revokeObjectURL(link.href);
 }
+
