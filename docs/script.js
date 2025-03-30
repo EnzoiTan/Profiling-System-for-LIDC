@@ -101,7 +101,7 @@ function displayUsers(users, type) {
                 try {
                     const data = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
                     if (Array.isArray(data)) {
-                        timestampsArray.push(...data);
+                        timestampsArray.push(...combineTimestamps(data)); // Combine timestamps
                     }
                 } catch (error) {
                     if (typeof user[key] === 'string') {
@@ -114,8 +114,8 @@ function displayUsers(users, type) {
         timestampsArray.sort((a, b) => new Date(b) - new Date(a));
         const latestTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---";
 
-        // Calculate times entered based on the timestamps
-        const timesEntered = timestampsArray.length; // Count of timestamps
+        // Calculate times entered based on the combined timestamps
+        const timesEntered = timestampsArray.length; // Adjusted count based on combined timestamps
 
         let rowHTML = `
             <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
@@ -159,64 +159,77 @@ function displayUsers(users, type) {
     });
 }
 
-// function updatePaginationText(totalEntries, type, users) {
-//     const paginationTextContainer = document.getElementById(`${type}-pagination-text`);
-//     let start = (currentPage[type] - 1) * rowsPerPage + 1;
-//     let end = Math.min(start + rowsPerPage - 1, totalEntries);
+/**
+ * Combine timestamps that are within a 1 or 2-minute gap.
+ * @param {Array} timestamps
+ * @return {Array}
+ */
+function combineTimestamps(timestamps) {
+    // Sort timestamps in ascending order
+    timestamps.sort((a, b) => new Date(a) - new Date(b));
+    const combined = [];
+    let lastTimestamp = null;
 
-//     const selectedMonth = document.getElementById("sortMonth").value;
-//     const monthlyPatronCount = {};
+    timestamps.forEach(timestamp => {
+        if (!lastTimestamp) {
+            lastTimestamp = timestamp;
+            return;
+        }
 
-//     if (users) {
-//         users.forEach(user => {
-//             const timestampKeys = Object.keys(user).filter(key => key.startsWith('timestamps_'));
+        // Calculate the difference in minutes
+        const diff = (new Date(timestamp) - new Date(lastTimestamp)) / (1000 * 60);
 
-//             const hasEntryInMonth = timestampKeys.some(key => {
-//                 if (user[key]) {
-//                     try {
-//                         const data = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
-//                         return data.some(ts => {
-//                             const entryDate = new Date(ts);
-//                             return selectedMonth === "all" || entryDate.toISOString().startsWith(`2025-${selectedMonth}`);
-//                         });
-//                     } catch (error) {
-//                         if (typeof user[key] === 'string') {
-//                             return user[key].split(",").some(ts => {
-//                                 const entryDate = new Date(ts.trim());
-//                                 return selectedMonth === "all" || entryDate.toISOString().startsWith(`2025-${selectedMonth}`);
-//                             });
-//                         }
-//                     }
-//                 }
-//                 return false;
-//             });
+        // If the difference is less than or equal to 5 minutes, keep the latest timestamp
+        if (diff <= 5) {
+            lastTimestamp = timestamp; // Update the last timestamp
+        } else {
+            combined.push(lastTimestamp); // Add the last timestamp to the combined array
+            lastTimestamp = timestamp; // Update the last timestamp
+        }
+    });
 
-//             if (hasEntryInMonth) {
-//                 const monthYear = selectedMonth === "all"
-//                     ? "All Months"
-//                     : new Date(`2025-${selectedMonth}-01`).toLocaleString('default', { month: 'long', year: 'numeric' });
+    // Add the last timestamp to the combined array
+    if (lastTimestamp) {
+        combined.push(lastTimestamp);
+    }
 
-//                 monthlyPatronCount[monthYear] = (monthlyPatronCount[monthYear] || 0) + 1;
-//             }
-//         });
-//     }
+    return combined;
+}
 
-//     const monthlyCountsText = Object.entries(monthlyPatronCount)
-//         .map(([month, count]) => `${month}: ${count}`)
-//         .join(" | ");
+function sendIDCardToServer(dataURL, libraryIdNo) {
+    fetch('download_image.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: dataURL, libraryIdNo }),
+    })
+        .then(response => response.blob())
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${libraryIdNo}_id_card.png`;
+            link.click();
+        })
+        .catch(err => console.error('Error sending ID card to server:', err));
+}
 
-//     const noDataMessage = Object.keys(monthlyPatronCount).length === 0 ? "No data for selected month" : "";
-
-//     if (totalEntries === 0) {
-//         paginationTextContainer.innerHTML = "No entries available.";
-//     } else {
-//         paginationTextContainer.innerHTML = `Showing ${start} to ${end} of ${totalEntries} entries
-//             <br>
-//             (${monthlyCountsText || noDataMessage})
-//         `;
-//     }
-// }
-
+// Call this function after generating the ID card
+bgImage.onload = function () {
+    html2canvas(idCard, {
+        backgroundColor: null,
+        scale: scaleFactor,
+        useCORS: true,
+    })
+        .then(canvas => {
+            const idCardDataURL = canvas.toDataURL('image/png', 1.0);
+            sendIDCardToServer(idCardDataURL, userData.libraryIdNo);
+            document.body.removeChild(idCard);
+        })
+        .catch(err => {
+            console.error('Error generating high-quality ID card image:', err);
+        });
+};
 
 function createPaginationControls(users, type) {
     const paginationContainer = document.getElementById(`${type}-pagination-controls`);
@@ -225,45 +238,69 @@ function createPaginationControls(users, type) {
     let totalPages = Math.ceil(users.length / rowsPerPage);
     if (totalPages <= 1) return;
 
-    const prevButton = document.createElement("button");
-    prevButton.textContent = "Previous";
-    prevButton.classList.add("pagination-button");
-    prevButton.disabled = currentPage[type] === 1;
-    prevButton.addEventListener("click", () => {
+    // Create Previous Page button
+    const prevPageButton = document.createElement("button");
+    prevPageButton.innerHTML = "&#8592;"; // Left arrow
+    prevPageButton.classList.add("pagination-button");
+    if (currentPage[type] === 1) prevPageButton.classList.add("disabled");
+    prevPageButton.addEventListener("click", () => {
         if (currentPage[type] > 1) {
             currentPage[type]--;
             displayUsers(users, type);
             createPaginationControls(users, type);
         }
     });
-    paginationContainer.appendChild(prevButton);
+    paginationContainer.appendChild(prevPageButton);
 
-    for (let i = 1; i <= totalPages; i++) {
-        const pageButton = document.createElement("button");
-        pageButton.textContent = i;
-        pageButton.classList.add("pagination-button");
-        if (i === currentPage[type]) pageButton.classList.add("active");
-        pageButton.addEventListener("click", () => {
-            currentPage[type] = i;
+    // Create First Page button
+    const firstPageButton = document.createElement("button");
+    firstPageButton.textContent = "1";
+    firstPageButton.classList.add("pagination-button");
+    if (currentPage[type] === 1) firstPageButton.classList.add("active");
+    firstPageButton.addEventListener("click", () => {
+        if (currentPage[type] !== 1) {
+            currentPage[type] = 1;
             displayUsers(users, type);
             createPaginationControls(users, type);
-        });
-        paginationContainer.appendChild(pageButton);
-    }
+        }
+    });
+    paginationContainer.appendChild(firstPageButton);
 
-    const nextButton = document.createElement("button");
-    nextButton.textContent = "Next";
-    nextButton.classList.add("pagination-button");
-    nextButton.disabled = currentPage[type] === totalPages;
-    nextButton.addEventListener("click", () => {
+    // Show current page info
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = `${currentPage[type]} of ${totalPages}`;
+    pageInfo.classList.add("pagination-info");
+    paginationContainer.appendChild(pageInfo);
+
+    // Create Last Page button
+    const lastPageButton = document.createElement("button");
+    lastPageButton.textContent = `${totalPages}`;
+    lastPageButton.classList.add("pagination-button");
+    if (currentPage[type] === totalPages) lastPageButton.classList.add("active");
+    lastPageButton.addEventListener("click", () => {
+        if (currentPage[type] !== totalPages) {
+            currentPage[type] = totalPages;
+            displayUsers(users, type);
+            createPaginationControls(users, type);
+        }
+    });
+    paginationContainer.appendChild(lastPageButton);
+
+    // Create Next Page button
+    const nextPageButton = document.createElement("button");
+    nextPageButton.innerHTML = "&#8594;"; // Right arrow
+    nextPageButton.classList.add("pagination-button");
+    if (currentPage[type] === totalPages) nextPageButton.classList.add("disabled");
+    nextPageButton.addEventListener("click", () => {
         if (currentPage[type] < totalPages) {
             currentPage[type]++;
             displayUsers(users, type);
             createPaginationControls(users, type);
         }
     });
-    paginationContainer.appendChild(nextButton);
+    paginationContainer.appendChild(nextPageButton);
 }
+
 
 function updateEntryCount(count, type) {
     let tableTitle = document.querySelector(`#${type}-table-container .table-title h2`);

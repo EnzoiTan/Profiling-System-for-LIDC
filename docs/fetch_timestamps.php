@@ -52,7 +52,12 @@ if ($row = $result->fetch_assoc()) {
     foreach ($timestampColumns as $column) {
         if (!empty($row[$column])) { // ✅ Only decode if data is not null/empty
             $decodedData = json_decode($row[$column], true);
-            $data[$column] = json_last_error() === JSON_ERROR_NONE ? $decodedData : $row[$column];
+            if (json_last_error() === JSON_ERROR_NONE) {
+                // Combine timestamps if they are within 1 or 2 minutes
+                $data[$column] = combineTimestamps($decodedData);
+            } else {
+                $data[$column] = $row[$column];
+            }
         } else {
             $data[$column] = []; // ✅ Return an empty array for null values
         }
@@ -63,3 +68,42 @@ if ($row = $result->fetch_assoc()) {
 echo json_encode($data);
 $stmt->close();
 $conn->close();
+
+/**
+ * Combine timestamps that are within a 1 or 2-minute gap.
+ *
+ * @param array $timestamps
+ * @return array
+ */
+function combineTimestamps(array $timestamps)
+{
+    // Sort timestamps in ascending order
+    sort($timestamps);
+    $combined = [];
+    $lastTimestamp = null;
+
+    foreach ($timestamps as $timestamp) {
+        if ($lastTimestamp === null) {
+            $lastTimestamp = $timestamp;
+            continue;
+        }
+
+        // Calculate the difference in minutes
+        $diff = (strtotime($timestamp) - strtotime($lastTimestamp)) / 60;
+
+        // If the difference is less than or equal to 5 minutes, keep the latest timestamp
+        if ($diff <= 5) {
+            $lastTimestamp = max($lastTimestamp, $timestamp); // Keep the latest timestamp
+        } else {
+            $combined[] = $lastTimestamp; // Add the last timestamp to the combined array
+            $lastTimestamp = $timestamp; // Update the last timestamp
+        }
+    }
+
+    // Add the last timestamp to the combined array if it exists
+    if ($lastTimestamp !== null) {
+        $combined[] = $lastTimestamp;
+    }
+
+    return $combined;
+}
