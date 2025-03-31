@@ -214,23 +214,6 @@ function sendIDCardToServer(dataURL, libraryIdNo) {
         .catch(err => console.error('Error sending ID card to server:', err));
 }
 
-// Call this function after generating the ID card
-bgImage.onload = function () {
-    html2canvas(idCard, {
-        backgroundColor: null,
-        scale: scaleFactor,
-        useCORS: true,
-    })
-        .then(canvas => {
-            const idCardDataURL = canvas.toDataURL('image/png', 1.0);
-            sendIDCardToServer(idCardDataURL, userData.libraryIdNo);
-            document.body.removeChild(idCard);
-        })
-        .catch(err => {
-            console.error('Error generating high-quality ID card image:', err);
-        });
-};
-
 function createPaginationControls(users, type) {
     const paginationContainer = document.getElementById(`${type}-pagination-controls`);
     paginationContainer.innerHTML = "";
