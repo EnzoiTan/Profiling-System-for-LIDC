@@ -180,7 +180,7 @@ function combineTimestamps(timestamps) {
         const diff = (new Date(timestamp) - new Date(lastTimestamp)) / (1000 * 60);
 
         // If the difference is less than or equal to 5 minutes, keep the latest timestamp
-        if (diff <= 5) {
+        if (diff <= 0) {
             lastTimestamp = timestamp; // Update the last timestamp
         } else {
             combined.push(lastTimestamp); // Add the last timestamp to the combined array
@@ -214,23 +214,6 @@ function sendIDCardToServer(dataURL, libraryIdNo) {
         .catch(err => console.error('Error sending ID card to server:', err));
 }
 
-// Call this function after generating the ID card
-bgImage.onload = function () {
-    html2canvas(idCard, {
-        backgroundColor: null,
-        scale: scaleFactor,
-        useCORS: true,
-    })
-        .then(canvas => {
-            const idCardDataURL = canvas.toDataURL('image/png', 1.0);
-            sendIDCardToServer(idCardDataURL, userData.libraryIdNo);
-            document.body.removeChild(idCard);
-        })
-        .catch(err => {
-            console.error('Error generating high-quality ID card image:', err);
-        });
-};
-
 function createPaginationControls(users, type) {
     const paginationContainer = document.getElementById(`${type}-pagination-controls`);
     paginationContainer.innerHTML = "";
@@ -240,7 +223,7 @@ function createPaginationControls(users, type) {
 
     // Create Previous Page button
     const prevPageButton = document.createElement("button");
-    prevPageButton.innerHTML = "&#8592;"; // Left arrow
+    prevPageButton.innerHTML = "Previous"; // Left arrow
     prevPageButton.classList.add("pagination-button");
     if (currentPage[type] === 1) prevPageButton.classList.add("disabled");
     prevPageButton.addEventListener("click", () => {
@@ -288,7 +271,7 @@ function createPaginationControls(users, type) {
 
     // Create Next Page button
     const nextPageButton = document.createElement("button");
-    nextPageButton.innerHTML = "&#8594;"; // Right arrow
+    nextPageButton.innerHTML = "Next"; // Right arrow
     nextPageButton.classList.add("pagination-button");
     if (currentPage[type] === totalPages) nextPageButton.classList.add("disabled");
     nextPageButton.addEventListener("click", () => {
