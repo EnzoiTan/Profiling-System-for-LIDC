@@ -92,7 +92,7 @@ function combineTimestamps(array $timestamps)
         $diff = (strtotime($timestamp) - strtotime($lastTimestamp)) / 60;
 
         // If the difference is less than or equal to 5 minutes, keep the latest timestamp
-        if ($diff <= 5) {
+        if ($diff <= 0) {
             $lastTimestamp = max($lastTimestamp, $timestamp); // Keep the latest timestamp
         } else {
             $combined[] = $lastTimestamp; // Add the last timestamp to the combined array
