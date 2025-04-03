@@ -180,7 +180,7 @@ function combineTimestamps(timestamps) {
         const diff = (new Date(timestamp) - new Date(lastTimestamp)) / (1000 * 60);
 
         // If the difference is less than or equal to 5 minutes, keep the latest timestamp
-        if (diff <= 0) {
+        if (diff <= 3) {
             lastTimestamp = timestamp; // Update the last timestamp
         } else {
             combined.push(lastTimestamp); // Add the last timestamp to the combined array
