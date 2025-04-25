@@ -88,6 +88,13 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
       </select>
       <input type="month" id="month-picker">
       <button onclick="exportData()">Export</button>
+      <button id="search-duplicates" onclick="searchForDuplicates()">🔍︎</button>
+      <div id="duplicate-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+          <span class="close" onclick="closeModal()">&times;</span>
+          <!-- Results will be injected here -->
+        </div>
+      </div>
     </div>
 
     <div id="timestamp-modal" class="modal" style="display: none;">

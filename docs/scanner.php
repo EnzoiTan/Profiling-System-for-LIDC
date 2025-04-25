@@ -16,75 +16,62 @@ if ($_SERVER["REQUEST_URI"] == "/favicon.ico") {
     <link rel="icon" href="data:,"> <!-- Prevents favicon error -->
     <link rel="icon" href="qr.png" type="image/x-icon" />
     <link rel="stylesheet" href="scanner.css">
-    <script>
-        window.onload = function() {
-            let searchInput = document.getElementById("search");
-            searchInput.focus(); // Auto-focus input
-
-            // Keep input focused even if clicked outside
-            document.addEventListener("click", function(event) {
-                if (event.target !== searchInput) {
-                    searchInput.focus();
-                }
-            });
-
-            let typingTimer; // Timer to delay URL processing
-            let doneTypingInterval = 1000; // Time to wait after the last character typed (in milliseconds)
-
-            searchInput.addEventListener("input", function() {
-                clearTimeout(typingTimer); // Clear the previous timer
-                typingTimer = setTimeout(processInput, doneTypingInterval); // Start a new timer
-            });
-
-            function processInput() {
-                let query = searchInput.value.trim();
-                let urlPattern = /^(https?:\/\/[\w\d\-_]+(\.[\w\d\-_]+)*(:\d+)?(\/[^\s]*)?)$/i;
-
-                if (urlPattern.test(query)) {
-                    window.open(query, "_blank"); // Open in a new tab
-                    setTimeout(() => {
-                        searchInput.value = "";
-                        searchInput.focus();
-                    }, 500); // Clear input & re-focus
-                }
-            }
-        };
-    </script>
 </head>
 <script>
     window.onload = function() {
-        let searchInput = document.getElementById("search");
-        searchInput.focus(); // Auto-focus input
+        const searchInput = document.getElementById("search");
+        searchInput.focus();
 
-        // Keep input focused even if clicked outside
         document.addEventListener("click", function(event) {
             if (event.target !== searchInput) {
                 searchInput.focus();
             }
         });
 
-        let typingTimer; // Timer to delay URL processing
-        let doneTypingInterval = 1000; // Time to wait after the last character typed (in milliseconds)
+        let typingTimer;
+        const doneTypingInterval = 1000;
 
         searchInput.addEventListener("input", function() {
-            clearTimeout(typingTimer); // Clear the previous timer
-            typingTimer = setTimeout(processInput, doneTypingInterval); // Start a new timer
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(processInput, doneTypingInterval);
         });
 
         function processInput() {
             let query = searchInput.value.trim();
-            let urlPattern = /^(https?:\/\/[\w\d\-_]+(\.[\w\d\-_]+)*(:\d+)?(\/[^\s]*)?)$/i;
 
-            if (urlPattern.test(query)) {
-                window.open(query, "_blank"); // Open in a new tab
-                setTimeout(() => {
-                    searchInput.value = "";
-                    searchInput.focus();
-                }, 500); // Clear input & re-focus
+            try {
+                let url = new URL(query);
+                let params = new URLSearchParams(url.search);
+
+                let newParams = new URLSearchParams();
+
+                for (let [key, value] of params.entries()) {
+                    if (key.toLowerCase() === 'libraryidno') {
+                        newParams.set('libraryIdNo', value);
+                    } else if (key.toLowerCase() === 'token') {
+                        newParams.set('token', value);
+                    } else {
+                        newParams.set(key, value); // Keep other params as-is
+                    }
+                }
+
+                let finalUrl = `${url.origin}${url.pathname}?${newParams.toString()}`;
+
+                // Open in new tab
+                window.open(finalUrl, "_blank");
+
+                // Reset and refocus for next scan
+                searchInput.value = "";
+                searchInput.focus();
+            } catch (e) {
+                // Optional: notify user if URL is invalid
+                console.warn("Invalid QR code or not a valid URL");
             }
         }
+
     };
 </script>
+
 </head>
 
 <body>
