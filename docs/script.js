@@ -47,6 +47,36 @@ function applySortState(sortState) {
     }
 }
 
+function searchForDuplicates() {
+    fetch('fetch_duplicates.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                let resultHTML = "<h3>Duplicate Entries Found:</h3><ul>";
+                data.forEach(entry => {
+                    resultHTML += `<li>${entry.firstName} ${entry.lastName} - ${entry.count} times</li>`;
+                });
+                resultHTML += "</ul>";
+                showModal(resultHTML); // Function to display results in a modal
+            } else {
+                alert("No duplicates found.");
+            }
+        })
+        .catch(error => console.error("Error fetching duplicates:", error));
+}
+
+function showModal(content) {
+    const modal = document.getElementById("duplicate-modal");
+    modal.querySelector(".modal-content").innerHTML = content; // Inject content
+    modal.style.display = "block"; // Show the modal
+}
+
+// Close modal function
+function closeModal() {
+    const modal = document.getElementById("duplicate-modal");
+    modal.style.display = "none"; // Hide the modal
+}
+
 function applySearchState(searchTerm) {
     if (searchTerm) {
         document.getElementById("search-input").value = searchTerm;
@@ -111,8 +141,8 @@ function displayUsers(users, type) {
             }
         });
 
-        timestampsArray.sort((a, b) => new Date(b) - new Date(a));
-        const latestTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---";
+        timestampsArray.sort((a, b) => new Date(a) - new Date(b)); // Sort timestamps in ascending order
+        const firstTimestamp = timestampsArray.length > 0 ? formatDate(timestampsArray[0]) : "---"; // Get the first timestamp
 
         // Calculate times entered based on the combined timestamps
         const timesEntered = timestampsArray.length; // Adjusted count based on combined timestamps
@@ -120,7 +150,7 @@ function displayUsers(users, type) {
         let rowHTML = `
             <td><a href="${user.qrCodeURL}" target="_blank">View</a></td>
             <td>${start + index + 1}</td>
-            <td>${latestTimestamp}</td>
+            <td>${firstTimestamp}</td> <!-- Display the first timestamp -->
             <td>${user.libraryIdNo}</td>
             <td>${fullName}</td>
             <td>${timesEntered || "---"}</td>
@@ -180,7 +210,7 @@ function combineTimestamps(timestamps) {
         const diff = (new Date(timestamp) - new Date(lastTimestamp)) / (1000 * 60);
 
         // If the difference is less than or equal to 5 minutes, keep the latest timestamp
-        if (diff <= 0) {
+        if (diff <= 3) {
             lastTimestamp = timestamp; // Update the last timestamp
         } else {
             combined.push(lastTimestamp); // Add the last timestamp to the combined array
