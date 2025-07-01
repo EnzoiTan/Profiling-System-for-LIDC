@@ -29,21 +29,27 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
   <script src="assets/bootstrap.min.js"></script>
 </head>
 
+
 <body>
-  <div class="sidebar">
-    <img class="sidebar-img" src="assets/logo.png" alt="">
-    <h2>LCC PROFILING SYSTEM</h2>
-    <ul>
-      <li><a href="#">Home</a></li>
-      <li><a href="borrow">Borrow Books</a></li>
-      <li><a href="stat_rep.php">Stats</a></li>
-      <li><a href="scanner.php" target="_blank">QR Link Scanner</a></li>
-    </ul>
-    <!-- Logout Button Positioned at the Bottom -->
-    <a href="logout.php" class="logout-btn">Logout</a>
-  </div>
+
+
 
   <div class="container">
+    <nav>
+      <div class="left-nav">
+        <img class="sidebar-img" src="zppsu-logo.png" alt="ZPPSU Logo">
+        <!-- <img class="sidebar-img" src="assets/logo.png" alt="ZPPSU Logo"> -->
+        <h2>Library Users Database</h2>
+      </div>
+      <div class="right-nav">
+        <ul>
+          <li><a href="index.php">Home</a></li>
+          <li><a href="stat_rep.php">Statistics</a></li>
+          <li><a href="scanner.php" target="_blank">QR Link Scanner</a></li>
+          <li><a href="logout.php" class="logout-btn">logout</a></li>
+        </ul>
+      </div>
+    </nav>
     <!-- Search Input -->
     <div class="form-group">
       <div class="separation1"
