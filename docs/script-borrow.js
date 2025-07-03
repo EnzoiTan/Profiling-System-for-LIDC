@@ -312,12 +312,12 @@ function formatDate(timestamp) {
 
 
 function openTimestampModal(libraryIdNo, fullName) {
-    document.getElementById("modal-user-name").textContent = fullName;
+    // document.getElementById("modal-user-name").textContent = fullName;
 
     fetch(`fetch_timestamps.php?libraryIdNo=${libraryIdNo}`)
         .then(response => response.text())
         .then(data => {
-            console.log("Raw response:", data);
+            // console.log("Raw response:", data);
 
             try {
                 const jsonData = JSON.parse(data);
@@ -330,7 +330,8 @@ function openTimestampModal(libraryIdNo, fullName) {
                     }
                 });
 
-                displayTimestamps(allTimestamps);
+                // displayTimestamps(allTimestamps);
+                
                 document.getElementById("timestamp-modal").style.display = "block";
             } catch (error) {
                 console.error("Error parsing JSON:", error);
@@ -518,7 +519,7 @@ window.onload = function () {
     displayPage(1);
 
     // Automatically trigger sorting for the "Date and Time" column (column index 1)
-    sortTable("timestamp-table", 1); // This will sort the table based on the Date and Time column
+    // sortTable("timestamp-table", 1); // This will sort the table based on the Date and Time column
 
     // Initialize sort icons for other sortable columns
     const sortableHeaders = document.querySelectorAll("th[onclick]");
@@ -554,54 +555,54 @@ function sortTimestampTable(columnIndex) {
     displayPage(1, rows.length); // Reset to the first page after sorting
 }
 
-function displayTimestamps(timestamps) {
-    const timestampBody = document.getElementById("timestamp-body");
-    timestampBody.innerHTML = "";
+// function displayTimestamps(timestamps) {
+//     // const timestampBody = document.getElementById("timestamp-body");
+//     // timestampBody.innerHTML = "";
 
-    if (!Array.isArray(timestamps)) {
-        console.error("Invalid timestamps data:", timestamps);
-        return;
-    }
+//     if (!Array.isArray(timestamps)) {
+//         console.error("Invalid timestamps data:", timestamps);
+//         return;
+//     }
 
-    timestamps.forEach((timestamp, index) => {
-        let dateObj = new Date(timestamp);
+//     timestamps.forEach((timestamp, index) => {
+//         let dateObj = new Date(timestamp);
 
-        if (isNaN(dateObj.getTime())) {
-            console.error("Invalid date:", timestamp);
-            return;
-        }
+//         if (isNaN(dateObj.getTime())) {
+//             console.error("Invalid date:", timestamp);
+//             return;
+//         }
 
-        let formattedTimestamp = dateObj.toLocaleString("en-US", {
-            weekday: "short", // Mon
-            month: "long", // February
-            day: "2-digit", // 20
-            year: "numeric", // 2023
-            hour: "2-digit", // 02
-            minute: "2-digit", // 31
-            second: "2-digit", // 33
-            hour12: true // PM
-        });
+//         let formattedTimestamp = dateObj.toLocaleString("en-US", {
+//             weekday: "short", // Mon
+//             month: "long", // February
+//             day: "2-digit", // 20
+//             year: "numeric", // 2023
+//             hour: "2-digit", // 02
+//             minute: "2-digit", // 31
+//             second: "2-digit", // 33
+//             hour12: true // PM
+//         });
 
-        // Custom formatting to match "Mon, February 20, 2023 02:31:33 PM"
-        formattedTimestamp = formattedTimestamp.replace(",", ""); // Remove extra comma
-        formattedTimestamp = formattedTimestamp.replace(/(\w{3}) (\d{2})/, "$1, $2"); // Adjust spacing
+//         // Custom formatting to match "Mon, February 20, 2023 02:31:33 PM"
+//         formattedTimestamp = formattedTimestamp.replace(",", ""); // Remove extra comma
+//         formattedTimestamp = formattedTimestamp.replace(/(\w{3}) (\d{2})/, "$1, $2"); // Adjust spacing
 
-        // Append "Date Registered" for the first timestamp
-        if (index === 0) {
-            formattedTimestamp += ` <span style="background-color: #2E7D32; color: white; padding: 3px 15px; margin-left: 20px; border-radius: 4px; font-size: 12px;">Date Registered</span>`;
-        }
+//         // Append "Date Registered" for the first timestamp
+//         if (index === 0) {
+//             formattedTimestamp += ` <span style="background-color: #2E7D32; color: white; padding: 3px 15px; margin-left: 20px; border-radius: 4px; font-size: 12px;">Date Registered</span>`;
+//         }
 
-        const row = document.createElement("tr");
-        row.innerHTML = `
-        <td>${index + 1}</td>
-        <td data-timestamp="${timestamp}">${formattedTimestamp}</td>
-    `;
-        timestampBody.appendChild(row);
-    });
+//         const row = document.createElement("tr");
+//         row.innerHTML = `
+//         <td>${index + 1}</td>
+//         <td data-timestamp="${timestamp}">${formattedTimestamp}</td>
+//     `;
+//         // timestampBody.appendChild(row);
+//     });
 
-    // Implement pagination
-    setupPagination(timestamps.length);
-}
+//     // Implement pagination
+//     setupPagination(timestamps.length);
+// }
 
 function handleSortChange() {
     const selectedType = document.getElementById("sortDropdown").value.toLowerCase();
@@ -703,8 +704,8 @@ function setupPagination(totalTimestamps) {
 
 function displayPage(page, totalTimestamps) {
     const rowsPerPage = 10;
-    const timestampBody = document.getElementById("timestamp-body");
-    const rows = timestampBody.querySelectorAll("tr");
+    // const timestampBody = document.getElementById("timestamp-body");
+    // const rows = timestampBody.querySelectorAll("tr");
 
     rows.forEach((row, index) => {
         row.style.display = (index >= (page - 1) * rowsPerPage && index < page * rowsPerPage) ? "" : "none";

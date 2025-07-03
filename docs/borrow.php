@@ -108,14 +108,10 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
         <div id="timestamp-modal" class="modal" style="display: none;">
             <div class="modal-content">
                 <span class="close-modal" onclick="closeModal()">&times;</span>
-                <h3>Enter <span style="font-weight: bold;">Book Details</span></h3>
-                <div class="scan">
-                    <!-- <button>Scan</button> -->
-                </div>
-                <div class="borrow-modal">
-                    <p>Book Name</p>
-                    <input type="text">
-                </div>
+                <h3>Enter <span>Book Details</span></h3>
+                <table id="timestamp-table">
+                    <tbody id="timestamp-body"></tbody>
+                </table>
                 <div id="pagination-controls"></div>
             </div>
         </div>
