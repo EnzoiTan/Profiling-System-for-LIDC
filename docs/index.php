@@ -45,6 +45,7 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
         <ul>
           <li><a href="index.php">Home</a></li>
           <li><a href="stat_rep.php">Statistics</a></li>
+          <li><a href="borrow.php">Borrow Book</a></li>
           <li><a href="scanner.php" target="_blank">QR Link Scanner</a></li>
           <li><a href="logout.php" class="logout-btn">logout</a></li>
         </ul>
